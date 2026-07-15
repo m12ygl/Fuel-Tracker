@@ -48,7 +48,12 @@
   }
   h1{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;letter-spacing:0.5px;margin:0;text-transform:uppercase;}
 
-  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .head{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;
+    position:sticky;top:0;z-index:30;background:var(--bg);
+    padding:12px 0 14px;margin-top:-12px;
+    border-bottom:1px solid var(--line);
+  }
   .daynav{display:flex;align-items:center;gap:10px;position:relative;}
   .nav-btn{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;}
   .nav-btn:hover{color:var(--text);border-color:var(--muted-2);}
