@@ -6,723 +6,665 @@
 <title>Fuel Tracker</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#101216">
-
-<!-- iOS "Add to Home Screen" behaviour -->
+<meta name="theme-color" content="#0b0d12">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Fuel">
-<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="apple-touch-icon" href="icon-180-v2.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
-  html, body { background:#101216; margin:0; padding:0; }
+  :root{
+    --bg:#0b0d12; --panel:#101622; --border:#1e2330;
+    --text:#f3f4f6; --body:#e8e8ea; --muted:#7d879b; --faint:#5b6272; --vfaint:#3a4150;
+    --blue:#4d8dff; --pink:#ff5ea8;
+  }
+  *{box-sizing:border-box;}
+  html,body{background:var(--bg);margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;color:var(--body);-webkit-tap-highlight-color:transparent;}
+  button, input{font-family:inherit;}
+  ::placeholder{color:var(--faint);}
+
+  #app{min-height:100vh;background:var(--bg);}
+  .main{padding:10px 20px 40px;max-width:520px;margin:0 auto;}
+
+  .hdr{
+    position:sticky;top:0;z-index:30;background:var(--bg);
+    padding-top:calc(env(safe-area-inset-top,0px) + 14px);
+    padding-bottom:10px;
+    display:flex;justify-content:space-between;align-items:flex-start;
+  }
+  .hdr .greeting{font-size:13px;color:var(--muted);}
+  .hdr .headline{font-family:'Archivo',sans-serif;font-weight:900;font-size:26px;color:var(--text);letter-spacing:-0.5px;}
+  .hdr .datesub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);font-weight:500;margin-top:2px;}
+  .hdr-btns{display:flex;gap:6px;}
+  .navbtn{width:34px;height:34px;border:1px solid var(--border);background:var(--panel);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;cursor:pointer;}
+  .navbtn:disabled{opacity:0.35;cursor:default;}
+  .calbtn{width:40px;height:40px;border-radius:11px;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;}
+
+  .calpop{position:absolute;top:72px;right:20px;z-index:35;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;width:260px;box-shadow:0 18px 40px rgba(0,0,0,0.5);}
+  .calpop-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .calpop-hdr button{width:28px;height:28px;border:1px solid var(--border);background:var(--bg);border-radius:7px;color:var(--muted);cursor:pointer;}
+  .calpop-hdr span{font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text);}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .calgrid .dow{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);text-align:center;padding-bottom:4px;}
+  .calgrid .day{font-family:'JetBrains Mono',monospace;font-size:12px;text-align:center;padding:7px 0;border-radius:7px;border:1px solid transparent;background:transparent;}
+  .calgrid .day.today{border:1px solid #2e3a52;}
+  .calgrid .day.sel{background:var(--blue);color:#0a0a0c;font-weight:700;}
+  .calgrid .day.future{color:var(--vfaint);cursor:default;}
+  .calgrid .day.clickable{cursor:pointer;color:var(--body);}
+
+  .dial-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:16px;}
+  .dial{position:relative;width:232px;height:232px;}
+  .dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .dial-center .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--faint);font-weight:700;}
+  .dial-center .num{font-family:'Archivo',sans-serif;font-weight:900;font-size:52px;line-height:0.9;letter-spacing:-2px;}
+  .dial-center .unit{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);}
+  .legend{display:flex;gap:22px;margin-top:6px;}
+  .legend-item{display:flex;align-items:center;gap:6px;}
+  .legend-item .dot{width:9px;height:9px;border-radius:2px;}
+  .legend-item span.txt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;}
+  .panel-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .panel-row:last-child{margin-bottom:0;}
+  .panel-row label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);flex:1;}
+  .panel-row input[type=number]{width:96px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 11px;font-size:14px;}
+  .btn-primary{background:var(--blue);border:none;color:#0a0a0c;font-family:'Archivo',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;padding:11px;border-radius:10px;cursor:pointer;width:100%;}
+
+  .coach{background:linear-gradient(135deg,#0e1626,#0d1018);border:1px solid #1c3050;border-radius:18px;padding:16px;margin-bottom:12px;}
+  .coach-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .coach-hdr-left{display:flex;align-items:center;gap:8px;}
+  .coach-badge{width:22px;height:22px;border-radius:6px;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#0a0a0c;font-family:'Archivo';font-weight:900;font-size:13px;}
+  .coach-hdr-left span{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--blue);font-weight:700;}
+  .coach-settings-btn{background:none;border:none;color:var(--faint);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;text-transform:uppercase;}
+  .coach-settings-panel{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:12px;}
+  .coach-settings-panel label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;}
+  .coach-settings-panel .row{display:flex;gap:8px;}
+  .coach-settings-panel input[type=text]{flex:1;min-width:0;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 10px;font-size:12px;}
+  .coach-settings-panel button{background:var(--blue);border:none;color:#0a0a0c;font-weight:800;font-size:11px;text-transform:uppercase;padding:0 12px;border-radius:8px;cursor:pointer;}
+  .chatlist{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;margin-bottom:12px;}
+  .chat-user{align-self:flex-end;background:var(--panel);border:1px solid var(--border);color:var(--body);padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;max-width:88%;white-space:pre-wrap;}
+  .chat-ai{align-self:flex-start;background:#0e1626;border:1px solid #1c3050;color:#d4d8e0;padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;max-width:88%;white-space:pre-wrap;}
+  .chat-loading{align-self:flex-start;color:var(--faint);font-style:italic;font-size:13.5px;padding:4px 2px;}
+  .chat-hint{font-size:14px;line-height:1.5;color:#d4d8e0;margin-bottom:12px;}
+  .coach-input-row{display:flex;gap:8px;}
+  .coach-input-row input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--text);}
+  .coach-send{width:44px;background:var(--blue);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#0a0a0c;font-family:'Archivo';font-weight:900;font-size:18px;cursor:pointer;flex-shrink:0;}
+  .coach-send:disabled{opacity:0.5;}
+
+  .addfood{position:relative;}
+  .addfood .namewrap{position:relative;margin-bottom:8px;}
+  .addfood input[type=text]{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:11px 13px;font-size:14px;}
+  .suggestbox{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;z-index:20;max-height:180px;overflow-y:auto;}
+  .suggest-item{display:flex;justify-content:space-between;padding:9px 12px;cursor:pointer;font-size:13px;color:var(--body);border-bottom:1px solid #1a2030;}
+  .suggest-item span.macro{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;}
+  .addfood-row{display:flex;gap:8px;}
+  .addfood-row input[type=number]{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:11px 13px;font-size:14px;}
+  .addfood-row button{background:var(--blue);border:none;color:#0a0a0c;font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;text-transform:uppercase;padding:0 16px;border-radius:9px;cursor:pointer;}
+
+  .actionrow{display:flex;gap:8px;margin-bottom:16px;}
+  .btn-log{flex:1;background:var(--blue);border:none;border-radius:12px;padding:13px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.5px;color:#0a0a0c;text-transform:uppercase;cursor:pointer;}
+  .btn-gear{width:52px;background:var(--panel);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:18px;cursor:pointer;}
+
+  .entries-hdr{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--faint);font-weight:700;padding:0 2px 8px;}
+  .entry-row{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-top:1px solid #1a2030;}
+  .entry-row .name{font-size:14px;color:var(--body);flex:1;}
+  .entry-row .macro{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-right:10px;}
+  .entry-row .del{background:none;border:none;color:var(--vfaint);font-size:16px;width:22px;height:22px;line-height:1;cursor:pointer;}
+  .empty-state{text-align:center;color:var(--faint);font-size:13px;padding:22px 0;}
+  .cleardayrow{display:flex;justify-content:center;margin-top:14px;}
+  .cleardayrow button{background:none;border:none;color:var(--faint);font-size:12px;font-family:'Inter';cursor:pointer;padding:6px;}
+  .datarow{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:4px;}
+  .datarow button{background:none;border:none;color:var(--faint);font-size:12px;font-family:'Inter';cursor:pointer;padding:6px;text-decoration:underline;}
+  .datarow .sep{color:var(--vfaint);font-size:12px;}
 </style>
 </head>
 <body>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
-  :root{
-    --bg:#101216;
-    --panel:#191c22;
-    --panel-2:#20242c;
-    --line:#2a2f39;
-    --text:#f3f4f6;
-    --muted:#828a99;
-    --muted-2:#5b6272;
-    --cal:#ff6a3d;
-    --cal-track:#33241c;
-    --pro:#33e2bb;
-    --pro-track:#183430;
-    --danger:#ff5c5c;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;}
-  .wrap{
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Inter',-apple-system,sans-serif;
-    padding:24px;
-    border-radius:16px;
-    max-width:620px;
-    margin:0 auto;
-  }
-  h1{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;letter-spacing:0.5px;margin:0;text-transform:uppercase;}
-
-  .head{
-    display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;
-    position:sticky;top:0;z-index:30;background:var(--bg);
-    padding-top:calc(env(safe-area-inset-top, 0px) + 14px);
-    padding-bottom:14px;
-    border-bottom:1px solid var(--line);
-  }
-  .daynav{display:flex;align-items:center;gap:10px;position:relative;}
-  .nav-btn{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;}
-  .nav-btn:hover{color:var(--text);border-color:var(--muted-2);}
-  .nav-btn:disabled{opacity:0.3;cursor:default;}
-  .nav-btn:disabled:hover{color:var(--muted);border-color:var(--line);}
-  .date-label{font-size:14px;color:var(--muted);min-width:118px;text-align:center;cursor:pointer;user-select:none;}
-  .date-label:hover{color:var(--text);}
-
-  .cal-popover{
-    position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
-    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
-    padding:14px;width:260px;z-index:20;display:none;box-shadow:0 12px 28px rgba(0,0,0,0.4);
-  }
-  .cal-popover.open{display:block;}
-  .cal-month-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-  .cal-month-row span{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text);}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-  .cal-dow{font-size:10px;color:var(--muted-2);text-align:center;padding-bottom:4px;text-transform:uppercase;}
-  .cal-day{
-    position:relative;font-size:12px;text-align:center;padding:6px 0;border-radius:6px;cursor:pointer;color:var(--text);
-  }
-  .cal-day:hover{background:var(--panel);}
-  .cal-day.empty{cursor:default;}
-  .cal-day.empty:hover{background:none;}
-  .cal-day.today{border:1px solid var(--muted-2);}
-  .cal-day.selected{background:var(--cal);color:#2a1208;font-weight:600;}
-  .cal-day.future{color:var(--muted-2);cursor:default;}
-  .cal-day.future:hover{background:none;}
-  .cal-dot{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:var(--pro);}
-  .cal-day.selected .cal-dot{background:#2a1208;}
-
-  .stats{display:flex;gap:14px;margin-bottom:18px;}
-  .stat-card{
-    flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;
-    padding:16px;display:flex;align-items:center;gap:14px;
-  }
-  .ring-wrap{position:relative;width:76px;height:76px;flex-shrink:0;}
-  .ring-wrap svg{transform:rotate(-90deg);}
-  .ring-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;}
-  .stat-info .lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px;}
-  .stat-info .amt{font-family:'Oswald',sans-serif;font-size:19px;font-weight:600;}
-  .stat-info .amt small{font-family:'Inter';font-size:12px;color:var(--muted);font-weight:400;}
-  .stat-info .msg{font-size:12px;margin-top:3px;color:var(--muted);}
-
-  .panel-block{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;}
-  .targets-row{display:flex;align-items:center;gap:10px;}
-  .targets-row label{font-size:12px;color:var(--muted);}
-  .targets-row input{width:80px;}
-
-  input[type=text],input[type=number]{
-    background:var(--panel-2);border:1px solid var(--line);color:var(--text);
-    border-radius:8px;padding:10px 12px;font-family:'Inter';font-size:14px;width:100%;
-  }
-  input:focus{outline:none;border-color:var(--cal);}
-
-  .add-row{display:flex;gap:8px;margin-bottom:16px;}
-  .autocomplete-wrap{position:relative;flex:2;min-width:0;}
-  .add-row input[type=number]{flex:1;min-width:0;}
-  .suggestions{
-    position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel-2);
-    border:1px solid var(--line);border-radius:8px;max-height:180px;overflow-y:auto;z-index:10;display:none;
-  }
-  .suggestions.open{display:block;}
-  .suggestion-item{display:flex;justify-content:space-between;padding:8px 10px;cursor:pointer;font-size:13px;}
-  .suggestion-item:hover,.suggestion-item.active{background:var(--panel);}
-  .suggestion-item .s-macro{color:var(--muted);font-size:12px;}
-
-  button{font-family:'Oswald',sans-serif;letter-spacing:0.5px;border:none;border-radius:8px;cursor:pointer;transition:transform .1s;}
-  button:active{transform:scale(0.97);}
-  .btn-add{background:var(--cal);color:#2a1208;font-weight:600;padding:0 18px;font-size:13px;text-transform:uppercase;}
-  .btn-add:hover{filter:brightness(1.08);}
-
-  .log-hdr{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:0 2px 10px;}
-  .entry{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-top:1px solid var(--line);font-size:14px;}
-  .entry:first-of-type{border-top:none;}
-  .entry .name{flex:1;}
-  .entry .macro{width:90px;text-align:right;color:var(--muted);font-size:12px;}
-  .entry .del{background:none;color:var(--muted-2);font-size:16px;width:24px;height:24px;line-height:1;}
-  .entry .del:hover{color:var(--danger);}
-  .empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0;}
-
-  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
-  .link-btn{background:none;color:var(--muted);font-size:12px;font-family:'Inter';padding:4px;}
-  .link-btn:hover{color:var(--text);}
-
-  .ai-panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px;}
-  .ai-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-  .ai-hdr .dot{width:8px;height:8px;border-radius:50%;background:var(--pro);}
-  .ai-hdr span{font-family:'Oswald',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
-  .ai-messages{max-height:260px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:8px;}
-  .ai-msg{padding:9px 12px;border-radius:10px;font-size:13.5px;line-height:1.45;max-width:88%;white-space:pre-wrap;}
-  .ai-msg.user{background:var(--panel-2);align-self:flex-end;color:var(--text);}
-  .ai-msg.ai{background:var(--cal-track);align-self:flex-start;color:var(--text);border:1px solid var(--line);}
-  .ai-msg.loading{color:var(--muted);font-style:italic;}
-  .ai-empty{color:var(--muted-2);font-size:13px;padding:6px 2px 12px;}
-  .ai-input-row{display:flex;gap:8px;}
-  .ai-input-row input{flex:1;}
-</style>
-
-<div class="wrap">
-  <div class="head">
-    <h1>Fuel log</h1>
-    <div class="daynav">
-      <button class="nav-btn" id="prev-day" aria-label="Previous day">‹</button>
-      <div class="date-label" id="date-label">Today</div>
-      <button class="nav-btn" id="next-day" aria-label="Next day">›</button>
-      <button class="nav-btn" id="cal-toggle" aria-label="Open calendar">▾</button>
-      <div class="cal-popover" id="cal-popover">
-        <div class="cal-month-row">
-          <button class="nav-btn" id="cal-prev-month">‹</button>
-          <span id="cal-month-label"></span>
-          <button class="nav-btn" id="cal-next-month">›</button>
-        </div>
-        <div class="cal-grid" id="cal-grid"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="stats">
-    <div class="stat-card">
-      <div class="ring-wrap">
-        <svg width="76" height="76" viewBox="0 0 76 76">
-          <circle cx="38" cy="38" r="32" fill="none" stroke="var(--cal-track)" stroke-width="8"/>
-          <circle id="cal-ring" cx="38" cy="38" r="32" fill="none" stroke="var(--cal)" stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"/>
-        </svg>
-        <div class="ring-center" id="cal-pct">0%</div>
-      </div>
-      <div class="stat-info">
-        <div class="lbl">Calories</div>
-        <div class="amt"><span id="cal-current">0</span> <small>/ <span id="cal-target">1800</span> kcal</small></div>
-        <div class="msg" id="cal-status"></div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="ring-wrap">
-        <svg width="76" height="76" viewBox="0 0 76 76">
-          <circle cx="38" cy="38" r="32" fill="none" stroke="var(--pro-track)" stroke-width="8"/>
-          <circle id="pro-ring" cx="38" cy="38" r="32" fill="none" stroke="var(--pro)" stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"/>
-        </svg>
-        <div class="ring-center" id="pro-pct">0%</div>
-      </div>
-      <div class="stat-info">
-        <div class="lbl">Protein</div>
-        <div class="amt"><span id="pro-current">0</span> <small>/ <span id="pro-target">150</span> g</small></div>
-        <div class="msg" id="pro-status"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="panel-block" id="targets-panel" style="display:none;">
-    <div class="targets-row">
-      <label>Calorie target</label>
-      <input type="number" id="cal-target-input" value="1800">
-      <label>Protein target</label>
-      <input type="number" id="pro-target-input" value="150">
-      <button class="btn-add" id="save-targets" style="margin-left:auto;">Save</button>
-    </div>
-  </div>
-
-  <div class="add-row">
-    <div class="autocomplete-wrap">
-      <input type="text" id="food-name" placeholder="Chicken breast" autocomplete="off">
-      <div class="suggestions" id="suggestions"></div>
-    </div>
-    <input type="number" id="food-cal" placeholder="kcal">
-    <input type="number" id="food-pro" placeholder="protein g">
-    <button class="btn-add" id="add-btn">Log it</button>
-  </div>
-
-  <div class="log-hdr"><span>Entries</span><span>kcal / protein</span></div>
-  <div id="entries-list"></div>
-  <div class="empty" id="empty-msg">Nothing logged yet — add your first item above.</div>
-
-  <div class="foot">
-    <button class="link-btn" id="toggle-targets">Edit targets</button>
-    <button class="link-btn" id="reset-day">Clear this day</button>
-  </div>
-
-  <div class="ai-panel">
-    <div class="ai-hdr" style="justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:8px;"><div class="dot"></div><span>Ask about today</span></div>
-      <button class="link-btn" id="toggle-ai-settings" style="text-transform:none;letter-spacing:0;">Settings</button>
-    </div>
-    <div class="panel-block" id="ai-settings-panel" style="display:none;margin-bottom:12px;">
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Worker URL (from your Cloudflare Worker deploy)</label>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="ai-worker-url" placeholder="https://your-worker.your-name.workers.dev">
-        <button class="btn-add" id="save-ai-settings">Save</button>
-      </div>
-    </div>
-    <div class="ai-messages" id="ai-messages"></div>
-    <div class="ai-empty" id="ai-empty">Try "what should I have for lunch?" or "can I still fit in a beer tonight?" — it knows your targets and what you've logged today.</div>
-    <div class="ai-input-row">
-      <input type="text" id="ai-input" placeholder="Ask a question...">
-      <button class="btn-add" id="ai-send">Ask</button>
-    </div>
-  </div>
-</div>
+<div id="app"><div class="main" id="main">Loading…</div></div>
 
 <script>
 (function(){
-  const RING_CIRC = 201;
+  // ---------- storage ----------
   const TARGETS_KEY = 'fuel-targets';
   const LIBRARY_KEY = 'fuel-food-library';
-  const entryKey = (d) => 'fuel-entries:'+d;
-
-  // Plain localStorage — this runs in a real browser now, not the artifact sandbox,
-  // so there's no rate limiting or transient failures to retry around.
-  async function storageGet(key){
-    try{
-      const v = localStorage.getItem(key);
-      return v === null ? null : {value: v};
-    }catch(e){
-      console.error('read failed', e);
-      return null;
-    }
-  }
-
-  async function storageSet(key, value){
-    try{
-      localStorage.setItem(key, value);
-      return true;
-    }catch(e){
-      console.error('save failed', e);
-      showSaveError();
-      return false;
-    }
-  }
-
-  async function storageList(prefix){
-    try{
-      const keys = Object.keys(localStorage).filter(k => k.startsWith(prefix));
-      return {keys};
-    }catch(e){
-      console.error('list failed', e);
-      return null;
-    }
-  }
-
-  let saveErrorTimeout = null;
-  function showSaveError(){
-    let banner = document.getElementById('save-error-banner');
-    if(!banner){
-      banner = document.createElement('div');
-      banner.id = 'save-error-banner';
-      banner.style.cssText = 'background:var(--danger);color:#3a0d0d;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:12px;text-align:center;';
-      banner.textContent = "Couldn't save that — check your connection and try again.";
-      document.querySelector('.wrap').insertBefore(banner, document.querySelector('.head'));
-    }
-    clearTimeout(saveErrorTimeout);
-    saveErrorTimeout = setTimeout(() => { banner.remove(); }, 5000);
-  }
-
-  let viewDate = new Date();
-  viewDate.setHours(0,0,0,0);
-  let calendarMonth = new Date(viewDate);
-  let targets = {calories:1800, protein:150};
-  let entries = [];
-  let library = {};
-  let loggedDates = new Set();
-  let activeIndex = -1;
-
-  function dateKey(d){
-    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-  function isSameDay(a,b){ return dateKey(a) === dateKey(b); }
-  function todayDate(){ const t = new Date(); t.setHours(0,0,0,0); return t; }
-
-  function formatLabel(d){
-    const t = todayDate();
-    const yest = new Date(t); yest.setDate(t.getDate()-1);
-    if(isSameDay(d,t)) return 'Today';
-    if(isSameDay(d,yest)) return 'Yesterday';
-    return d.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
-  }
-
-  async function loadTargets(){
-    const r = await storageGet(TARGETS_KEY);
-    if(r && r.value){
-      try{ targets = JSON.parse(r.value); }catch(e){}
-    }
-    document.getElementById('cal-target-input').value = targets.calories;
-    document.getElementById('pro-target-input').value = targets.protein;
-  }
-
-  async function saveTargets(){
-    await storageSet(TARGETS_KEY, JSON.stringify(targets));
-  }
-
-  async function loadLibrary(){
-    const r = await storageGet(LIBRARY_KEY);
-    if(r && r.value){
-      try{ library = JSON.parse(r.value); }catch(e){ library = {}; }
-    }
-  }
-
-  async function saveLibrary(){
-    await storageSet(LIBRARY_KEY, JSON.stringify(library));
-  }
-
-  async function refreshLoggedDates(){
-    const r = await storageList('fuel-entries:');
-    loggedDates = new Set();
-    if(r && r.keys){
-      r.keys.forEach(k => loggedDates.add(k.replace('fuel-entries:','')));
-    }
-  }
-
-  async function loadDay(){
-    const r = await storageGet(entryKey(dateKey(viewDate)));
-    if(r && r.value){
-      try{ entries = JSON.parse(r.value); }catch(e){ entries = []; }
-    } else {
-      entries = [];
-    }
-    render();
-  }
-
-  async function saveEntries(){
-    const ok = await storageSet(entryKey(dateKey(viewDate)), JSON.stringify(entries));
-    if(ok){ loggedDates.add(dateKey(viewDate)); }
-  }
-
-  function rememberFood(name, cal, pro){
-    library[name.toLowerCase()] = {name, cal, pro};
-    saveLibrary();
-  }
-
-  function getMatches(query){
-    const q = query.trim().toLowerCase();
-    if(!q) return [];
-    return Object.values(library).filter(f => f.name.toLowerCase().includes(q)).slice(0,6);
-  }
-
-  function renderSuggestions(matches){
-    const box = document.getElementById('suggestions');
-    activeIndex = -1;
-    box.innerHTML = '';
-    if(matches.length === 0){ box.classList.remove('open'); return; }
-    matches.forEach(f => {
-      const item = document.createElement('div');
-      item.className = 'suggestion-item';
-      item.innerHTML = '<span class="s-name"></span><span class="s-macro"></span>';
-      item.querySelector('.s-name').textContent = f.name;
-      item.querySelector('.s-macro').textContent = Math.round(f.cal)+' kcal / '+Math.round(f.pro)+'g';
-      item.addEventListener('mousedown', (e) => { e.preventDefault(); selectSuggestion(f); });
-      box.appendChild(item);
-    });
-    box.classList.add('open');
-  }
-
-  function selectSuggestion(f){
-    document.getElementById('food-name').value = f.name;
-    document.getElementById('food-cal').value = f.cal;
-    document.getElementById('food-pro').value = f.pro;
-    document.getElementById('suggestions').classList.remove('open');
-    document.getElementById('food-cal').focus();
-  }
-
-  function setRing(id, pctEl, pct){
-    const ring = document.getElementById(id);
-    const clamped = Math.max(0, Math.min(1, pct));
-    ring.setAttribute('stroke-dashoffset', (RING_CIRC * (1-clamped)).toFixed(1));
-    document.getElementById(pctEl).textContent = Math.round(clamped*100)+'%';
-  }
-
-  function render(){
-    document.getElementById('date-label').textContent = formatLabel(viewDate);
-    document.getElementById('next-day').disabled = isSameDay(viewDate, todayDate());
-
-    const list = document.getElementById('entries-list');
-    const empty = document.getElementById('empty-msg');
-    list.innerHTML = '';
-    if(entries.length === 0){
-      empty.style.display = 'block';
-    } else {
-      empty.style.display = 'none';
-      entries.forEach(e => {
-        const row = document.createElement('div');
-        row.className = 'entry';
-        row.innerHTML = '<span class="name"></span><span class="macro"></span><button class="del" aria-label="Delete entry">\u00d7</button>';
-        row.querySelector('.name').textContent = e.name;
-        row.querySelector('.macro').textContent = Math.round(e.cal)+' / '+Math.round(e.pro)+'g';
-        row.querySelector('.del').addEventListener('click', () => {
-          entries = entries.filter(x => x.id !== e.id);
-          saveEntries();
-          render();
-        });
-        list.appendChild(row);
-      });
-    }
-
-    const totalCal = entries.reduce((s,e)=>s+Number(e.cal||0),0);
-    const totalPro = entries.reduce((s,e)=>s+Number(e.pro||0),0);
-
-    document.getElementById('cal-current').textContent = Math.round(totalCal);
-    document.getElementById('pro-current').textContent = Math.round(totalPro);
-    document.getElementById('cal-target').textContent = targets.calories;
-    document.getElementById('pro-target').textContent = targets.protein;
-
-    setRing('cal-ring','cal-pct', totalCal/targets.calories);
-    setRing('pro-ring','pro-pct', totalPro/targets.protein);
-
-    const calStatus = document.getElementById('cal-status');
-    const remCal = targets.calories - totalCal;
-    calStatus.textContent = remCal >= 0 ? Math.round(remCal)+' kcal left' : Math.round(-remCal)+' kcal over';
-    calStatus.style.color = remCal >= 0 ? 'var(--muted)' : 'var(--danger)';
-
-    const proStatus = document.getElementById('pro-status');
-    const remPro = targets.protein - totalPro;
-    proStatus.textContent = remPro > 0 ? Math.round(remPro)+'g to go' : 'Target hit';
-    proStatus.style.color = remPro > 0 ? 'var(--muted)' : 'var(--pro)';
-  }
-
-  function renderCalendarGrid(){
-    document.getElementById('cal-month-label').textContent = calendarMonth.toLocaleDateString(undefined,{month:'long', year:'numeric'});
-    const grid = document.getElementById('cal-grid');
-    grid.innerHTML = '';
-    ['S','M','T','W','T','F','S'].forEach(d => {
-      const el = document.createElement('div');
-      el.className = 'cal-dow';
-      el.textContent = d;
-      grid.appendChild(el);
-    });
-    const firstOfMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
-    const startOffset = firstOfMonth.getDay();
-    const daysInMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth()+1, 0).getDate();
-    const today = todayDate();
-
-    for(let i=0;i<startOffset;i++){
-      const filler = document.createElement('div');
-      filler.className = 'cal-day empty';
-      grid.appendChild(filler);
-    }
-    for(let day=1; day<=daysInMonth; day++){
-      const d = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), day);
-      const cell = document.createElement('div');
-      cell.className = 'cal-day';
-      cell.textContent = day;
-      if(d > today){ cell.classList.add('future'); }
-      if(isSameDay(d, today)){ cell.classList.add('today'); }
-      if(isSameDay(d, viewDate)){ cell.classList.add('selected'); }
-      if(loggedDates.has(dateKey(d))){
-        const dot = document.createElement('div');
-        dot.className = 'cal-dot';
-        cell.appendChild(dot);
-      }
-      if(d <= today){
-        cell.addEventListener('click', () => {
-          viewDate = d;
-          document.getElementById('cal-popover').classList.remove('open');
-          loadDay();
-        });
-      }
-      grid.appendChild(cell);
-    }
-  }
-
-  document.getElementById('add-btn').addEventListener('click', () => {
-    const name = document.getElementById('food-name').value.trim();
-    const cal = Number(document.getElementById('food-cal').value);
-    const pro = Number(document.getElementById('food-pro').value) || 0;
-    if(!name || !cal){ return; }
-    entries.push({id: Date.now()+'-'+Math.random().toString(36).slice(2), name, cal, pro});
-    rememberFood(name, cal, pro);
-    saveEntries();
-    document.getElementById('food-name').value = '';
-    document.getElementById('food-cal').value = '';
-    document.getElementById('food-pro').value = '';
-    document.getElementById('suggestions').classList.remove('open');
-    document.getElementById('food-name').focus();
-    render();
-  });
-
-  const nameInput = document.getElementById('food-name');
-  const suggestBox = document.getElementById('suggestions');
-
-  nameInput.addEventListener('input', () => renderSuggestions(getMatches(nameInput.value)));
-  nameInput.addEventListener('focus', () => { if(nameInput.value.trim()) renderSuggestions(getMatches(nameInput.value)); });
-  nameInput.addEventListener('keydown', (e) => {
-    const items = suggestBox.querySelectorAll('.suggestion-item');
-    if(!suggestBox.classList.contains('open') || items.length === 0){ return; }
-    if(e.key === 'ArrowDown'){ e.preventDefault(); activeIndex = Math.min(activeIndex+1, items.length-1); items.forEach((it,i)=>it.classList.toggle('active', i===activeIndex)); }
-    else if(e.key === 'ArrowUp'){ e.preventDefault(); activeIndex = Math.max(activeIndex-1, 0); items.forEach((it,i)=>it.classList.toggle('active', i===activeIndex)); }
-    else if(e.key === 'Enter'){ if(activeIndex >= 0){ e.preventDefault(); items[activeIndex].dispatchEvent(new Event('mousedown')); } }
-    else if(e.key === 'Escape'){ suggestBox.classList.remove('open'); }
-  });
-
-  document.getElementById('toggle-targets').addEventListener('click', () => {
-    const panel = document.getElementById('targets-panel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  });
-  document.getElementById('save-targets').addEventListener('click', () => {
-    targets = {
-      calories: Number(document.getElementById('cal-target-input').value) || targets.calories,
-      protein: Number(document.getElementById('pro-target-input').value) || targets.protein
-    };
-    saveTargets();
-    document.getElementById('targets-panel').style.display = 'none';
-    render();
-  });
-  document.getElementById('reset-day').addEventListener('click', () => {
-    entries = [];
-    saveEntries();
-    render();
-  });
-
-  document.getElementById('prev-day').addEventListener('click', () => {
-    viewDate.setDate(viewDate.getDate()-1);
-    viewDate = new Date(viewDate);
-    calendarMonth = new Date(viewDate);
-    loadDay();
-  });
-  document.getElementById('next-day').addEventListener('click', () => {
-    if(isSameDay(viewDate, todayDate())) return;
-    viewDate.setDate(viewDate.getDate()+1);
-    viewDate = new Date(viewDate);
-    calendarMonth = new Date(viewDate);
-    loadDay();
-  });
-
-  document.getElementById('cal-toggle').addEventListener('click', () => {
-    calendarMonth = new Date(viewDate);
-    renderCalendarGrid();
-    document.getElementById('cal-popover').classList.toggle('open');
-  });
-  document.getElementById('date-label').addEventListener('click', () => {
-    calendarMonth = new Date(viewDate);
-    renderCalendarGrid();
-    document.getElementById('cal-popover').classList.toggle('open');
-  });
-  document.getElementById('cal-prev-month').addEventListener('click', () => {
-    calendarMonth.setMonth(calendarMonth.getMonth()-1);
-    calendarMonth = new Date(calendarMonth);
-    renderCalendarGrid();
-  });
-  document.getElementById('cal-next-month').addEventListener('click', () => {
-    calendarMonth.setMonth(calendarMonth.getMonth()+1);
-    calendarMonth = new Date(calendarMonth);
-    renderCalendarGrid();
-  });
-
-  document.addEventListener('click', (e) => {
-    const wrap = document.querySelector('.daynav');
-    if(!wrap.contains(e.target)){
-      document.getElementById('cal-popover').classList.remove('open');
-    }
-    if(!nameInput.contains(e.target) && !suggestBox.contains(e.target)){
-      suggestBox.classList.remove('open');
-    }
-  });
-
   const WORKER_URL_KEY = 'fuel-ai-worker-url';
-  let workerUrl = localStorage.getItem(WORKER_URL_KEY) || '';
+  const entryKey = (k) => 'fuel-entries:'+k;
 
-  document.getElementById('toggle-ai-settings').addEventListener('click', () => {
-    const panel = document.getElementById('ai-settings-panel');
-    document.getElementById('ai-worker-url').value = workerUrl;
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  });
-  document.getElementById('save-ai-settings').addEventListener('click', () => {
-    workerUrl = document.getElementById('ai-worker-url').value.trim();
-    localStorage.setItem(WORKER_URL_KEY, workerUrl);
-    document.getElementById('ai-settings-panel').style.display = 'none';
-  });
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+  function lsRemove(k){ try{ localStorage.removeItem(k); }catch(e){} }
 
-  let chatHistory = [];
+  // ---------- date helpers ----------
+  function keyOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function parseKey(k){ const [y,m,dd]=k.split('-').map(Number); return new Date(y, m-1, dd); }
+  function todayKey(){ return keyOf(new Date()); }
 
-  function buildContext(){
-    const totalCal = entries.reduce((s,e)=>s+Number(e.cal||0),0);
-    const totalPro = entries.reduce((s,e)=>s+Number(e.pro||0),0);
-    const remCal = Math.max(0, targets.calories - totalCal);
-    const remPro = Math.max(0, targets.protein - totalPro);
-    const loggedList = entries.length
-      ? entries.map(e => `${e.name} (${Math.round(e.cal)} kcal, ${Math.round(e.pro)}g protein)`).join('; ')
-      : 'nothing yet';
-    const commonFoods = Object.values(library).slice(0, 20)
-      .map(f => `${f.name} (${Math.round(f.cal)} kcal, ${Math.round(f.pro)}g protein)`).join('; ');
+  // ---------- state ----------
+  const state = {
+    ready:false,
+    targets:{ calories:1800, protein:150 },
+    entries:[],
+    library:{},
+    loggedDates:[],
+    viewKey:null,
+    calMonth:null,
+    showCal:false,
+    showTargets:false,
+    addOpen:false,
+    suggestions:[],
+    chat:[],
+    asking:false,
+    showAiSettings:false,
+    workerUrl: lsGet(WORKER_URL_KEY) || ''
+  };
 
-    return `You are a blunt, practical nutrition assistant inside a calorie/protein tracking app. Keep answers short (2-4 sentences max), specific, and actionable — no fluff, no disclaimers, no "consult a doctor". This person is on a cutting phase.
-
-Viewing date: ${formatLabel(viewDate)} (${dateKey(viewDate)})
-Daily target: ${targets.calories} kcal, ${targets.protein}g protein
-Eaten so far: ${Math.round(totalCal)} kcal, ${Math.round(totalPro)}g protein
-Remaining budget: ${Math.round(remCal)} kcal, ${Math.round(remPro)}g protein
-Logged today: ${loggedList}
-Foods this person logs regularly (use these for suggestions where sensible): ${commonFoods || 'none saved yet'}
-
-Answer the person's question using this context. If they ask what to eat, give 1-2 concrete options that fit their remaining budget, ideally from their regular foods.`;
+  function loadEntries(k){
+    const raw = lsGet(entryKey(k));
+    if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+    return [];
+  }
+  function scanLoggedDates(){
+    const out = [];
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const key = localStorage.key(i);
+        if(key && key.indexOf('fuel-entries:')===0){ out.push(key.replace('fuel-entries:','')); }
+      }
+    }catch(e){}
+    return out;
+  }
+  function persistEntries(entries){
+    const k = state.viewKey;
+    if(entries.length){ lsSet(entryKey(k), JSON.stringify(entries)); }
+    else { lsRemove(entryKey(k)); }
+    state.entries = entries;
+    state.loggedDates = scanLoggedDates();
+    render();
+  }
+  function persistTargets(targets){ lsSet(TARGETS_KEY, JSON.stringify(targets)); state.targets = targets; }
+  function rememberFood(name, cal, pro){
+    const library = { ...state.library };
+    library[name.toLowerCase()] = { name, cal, pro };
+    lsSet(LIBRARY_KEY, JSON.stringify(library));
+    state.library = library;
   }
 
-  function appendMessage(role, text){
-    document.getElementById('ai-empty').style.display = 'none';
-    const box = document.getElementById('ai-messages');
-    const el = document.createElement('div');
-    el.className = 'ai-msg ' + role;
-    el.textContent = text;
-    box.appendChild(el);
-    box.scrollTop = box.scrollHeight;
-    return el;
+  // ---------- init ----------
+  function init(){
+    let targets = { calories:1800, protein:150 };
+    const tRaw = lsGet(TARGETS_KEY);
+    if(tRaw){ try{ targets = JSON.parse(tRaw); }catch(e){} }
+    let library = {};
+    const lRaw = lsGet(LIBRARY_KEY);
+    if(lRaw){ try{ library = JSON.parse(lRaw); }catch(e){} }
+    const viewKey = todayKey();
+    const now = new Date();
+    state.ready = true;
+    state.targets = targets;
+    state.library = library;
+    state.viewKey = viewKey;
+    state.calMonth = { y: now.getFullYear(), m: now.getMonth() };
+    state.entries = loadEntries(viewKey);
+    state.loggedDates = scanLoggedDates();
+    render();
   }
 
-  async function askAI(){
-    const input = document.getElementById('ai-input');
-    const question = input.value.trim();
-    if(!question) return;
+  // ---------- day nav ----------
+  function goDay(delta){
+    const d = parseKey(state.viewKey);
+    d.setDate(d.getDate()+delta);
+    const k = keyOf(d);
+    if(k > todayKey()) return;
+    state.viewKey = k;
+    state.entries = loadEntries(k);
+    state.calMonth = { y:d.getFullYear(), m:d.getMonth() };
+    state.showCal = false;
+    render();
+  }
+  function pickDay(k){
+    const d = parseKey(k);
+    state.viewKey = k;
+    state.entries = loadEntries(k);
+    state.showCal = false;
+    state.calMonth = { y:d.getFullYear(), m:d.getMonth() };
+    render();
+  }
 
-    if(!workerUrl){
-      appendMessage('user', question);
-      appendMessage('ai', "No Worker URL set yet — tap Settings above and paste in your Cloudflare Worker URL first.");
-      input.value = '';
+  // ---------- totals ----------
+  function totals(){
+    const c = state.entries.reduce((s,e)=>s+Number(e.cal||0),0);
+    const p = state.entries.reduce((s,e)=>s+Number(e.pro||0),0);
+    return { c, p };
+  }
+
+  // ---------- add food ----------
+  function submitAdd(){
+    const nameEl = document.getElementById('ft-name');
+    const calEl = document.getElementById('ft-cal');
+    const proEl = document.getElementById('ft-pro');
+    const name = (nameEl && nameEl.value || '').trim();
+    const cal = Number(calEl && calEl.value);
+    const pro = Number(proEl && proEl.value) || 0;
+    if(!name || !cal) return;
+    const entry = { id: Date.now()+'-'+Math.random().toString(36).slice(2), name, cal, pro };
+    rememberFood(name, cal, pro);
+    persistEntries([...state.entries, entry]);
+    state.suggestions = [];
+    render();
+    const freshNameEl = document.getElementById('ft-name');
+    if(freshNameEl) freshNameEl.focus();
+  }
+  function nameInput(e){
+    const q = (e.target.value||'').trim().toLowerCase();
+    if(!q){ state.suggestions = []; render(); return; }
+    const matches = Object.values(state.library).filter(f=>f.name.toLowerCase().includes(q)).slice(0,6);
+    state.suggestions = matches;
+    render();
+  }
+  function fillSuggestion(f){
+    state.suggestions = [];
+    render();
+    const nameEl = document.getElementById('ft-name');
+    const calEl = document.getElementById('ft-cal');
+    const proEl = document.getElementById('ft-pro');
+    if(nameEl) nameEl.value = f.name;
+    if(calEl) calEl.value = f.cal;
+    if(proEl) proEl.value = f.pro;
+    if(calEl) calEl.focus();
+  }
+
+  // ---------- targets ----------
+  function toggleTargets(){
+    state.showTargets = !state.showTargets;
+    render();
+    if(state.showTargets){
+      const tc=document.getElementById('ft-tcal'), tp=document.getElementById('ft-tpro');
+      if(tc) tc.value=state.targets.calories;
+      if(tp) tp.value=state.targets.protein;
+    }
+  }
+  function saveTargets(){
+    const tc = document.getElementById('ft-tcal'), tp = document.getElementById('ft-tpro');
+    const cal = Number(tc && tc.value) || state.targets.calories;
+    const pro = Number(tp && tp.value) || state.targets.protein;
+    persistTargets({ calories: cal, protein: pro });
+    state.showTargets = false;
+    render();
+  }
+
+  // ---------- coach / AI ----------
+  function buildSystem(){
+    const {c,p} = totals();
+    const t = state.targets;
+    const remC = Math.max(0, t.calories - c), remP = Math.max(0, t.protein - p);
+    const logged = state.entries.length ? state.entries.map(e=>`${e.name} (${Math.round(e.cal)} kcal, ${Math.round(e.pro)}g)`).join('; ') : 'nothing yet';
+    const common = Object.values(state.library).slice(0,20).map(f=>`${f.name} (${Math.round(f.cal)} kcal, ${Math.round(f.pro)}g)`).join('; ');
+    return `You are a blunt, practical nutrition coach inside a calorie/protein tracker. Keep answers to 2-4 sentences, specific and actionable — no fluff, no medical disclaimers. This person is on a cutting phase.\nDay: ${state.viewKey}\nDaily target: ${t.calories} kcal, ${t.protein}g protein\nEaten: ${Math.round(c)} kcal, ${Math.round(p)}g protein\nRemaining: ${Math.round(remC)} kcal, ${Math.round(remP)}g protein\nLogged today: ${logged}\nRegular foods: ${common || 'none saved'}\nIf asked what to eat, give 1-2 concrete options that fit the remaining budget, ideally from their regular foods.`;
+  }
+  async function ask(){
+    const input = document.getElementById('ft-coach');
+    const q = (input && input.value || '').trim();
+    if(!q || state.asking) return;
+    if(!state.workerUrl){
+      state.chat = [...state.chat, {role:'user', text:q}, {role:'ai', text:"No Worker URL set yet — tap Settings above and paste in your Cloudflare Worker URL first."}];
+      if(input) input.value = '';
+      render();
       return;
     }
-
-    input.value = '';
-    appendMessage('user', question);
-    const loadingEl = appendMessage('ai loading', 'Thinking...');
-    document.getElementById('ai-send').disabled = true;
-
-    chatHistory.push({role:'user', content: question});
-
+    if(input) input.value = '';
+    state.chat = [...state.chat, {role:'user', text:q}, {role:'loading', text:'Thinking…'}];
+    state.asking = true;
+    render();
+    let answer = "Couldn't reach the coach just now — try again in a moment.";
     try{
-      const response = await fetch(workerUrl, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+      const response = await fetch(state.workerUrl, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           model: 'claude-sonnet-5',
           max_tokens: 1000,
-          system: buildContext(),
-          messages: chatHistory
+          system: buildSystem(),
+          messages: [{ role:'user', content:q }]
         })
       });
       const data = await response.json();
       if(data.error){
-        loadingEl.remove();
-        appendMessage('ai', "API error: " + (data.error.message || JSON.stringify(data.error)));
-        chatHistory.pop();
-        document.getElementById('ai-send').disabled = false;
-        return;
+        answer = "API error: " + (data.error.message || JSON.stringify(data.error));
+      } else {
+        const textBlocks = (data.content || []).filter(b=>b.type==='text').map(b=>b.text);
+        answer = textBlocks.join('\n').trim() || "Got an empty response — try rephrasing.";
       }
-      const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text);
-      const answer = textBlocks.join('\n').trim() || "Got an empty response — try rephrasing.";
-      loadingEl.remove();
-      appendMessage('ai', answer);
-      chatHistory.push({role:'assistant', content: answer});
-      if(chatHistory.length > 12){ chatHistory = chatHistory.slice(-12); }
     }catch(e){
-      loadingEl.remove();
-      appendMessage('ai', "Couldn't reach the Worker — check the URL in Settings and your connection.");
-      chatHistory.pop();
+      answer = "Couldn't reach the Worker — check the URL in Settings and your connection.";
     }
-    document.getElementById('ai-send').disabled = false;
+    const base = state.chat.filter(m=>m.role!=='loading');
+    state.chat = [...base, {role:'ai', text:answer}];
+    state.asking = false;
+    render();
+  }
+  function toggleAiSettings(){
+    state.showAiSettings = !state.showAiSettings;
+    render();
+    if(state.showAiSettings){
+      const el = document.getElementById('ft-worker-url');
+      if(el) el.value = state.workerUrl;
+    }
+  }
+  function saveAiSettings(){
+    const el = document.getElementById('ft-worker-url');
+    state.workerUrl = (el && el.value || '').trim();
+    lsSet(WORKER_URL_KEY, state.workerUrl);
+    state.showAiSettings = false;
+    render();
   }
 
-  document.getElementById('ai-send').addEventListener('click', askAI);
-  document.getElementById('ai-input').addEventListener('keydown', (e) => {
-    if(e.key === 'Enter'){ askAI(); }
-  });
-
-  async function init(){
-    await loadLibrary();
-    await loadTargets();
-    await refreshLoggedDates();
-    await loadDay();
+  // ---------- calendar grid ----------
+  function buildCalDays(){
+    const {y,m} = state.calMonth;
+    const first = new Date(y,m,1);
+    const startOffset = first.getDay();
+    const days = new Date(y,m+1,0).getDate();
+    const todayK = todayKey();
+    const logged = new Set(state.loggedDates);
+    const cells = [];
+    for(let i=0;i<startOffset;i++){ cells.push({ empty:true, key:'e'+i }); }
+    for(let d=1; d<=days; d++){
+      const dd = new Date(y,m,d);
+      const k = keyOf(dd);
+      const isFuture = k > todayK;
+      const isSel = k === state.viewKey;
+      const isToday = k === todayK;
+      cells.push({ empty:false, key:k, label:String(d), isFuture, isSel, isToday, clickable: !isFuture });
+    }
+    return cells;
   }
+
+  // ---------- escaping ----------
+  function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ---------- render ----------
+  function render(){
+    const mainEl = document.getElementById('main');
+
+    // capture focus state to restore after innerHTML rebuild
+    const active = document.activeElement;
+    const activeId = active && active.id;
+    const activeValue = active && 'value' in active ? active.value : null;
+    const selStart = active && active.selectionStart;
+    const selEnd = active && active.selectionEnd;
+
+    mainEl.innerHTML = buildHTML();
+
+    if(activeId){
+      const el = document.getElementById(activeId);
+      if(el){
+        el.focus();
+        if(typeof activeValue === 'string') el.value = activeValue;
+        if(selStart != null && el.setSelectionRange){ try{ el.setSelectionRange(selStart, selEnd); }catch(e){} }
+      }
+    }
+  }
+
+  function buildHTML(){
+    if(!state.ready){
+      return `<div class="empty-state">Loading your day…</div>`;
+    }
+
+    const { c, p } = totals();
+    const t = state.targets;
+    const remC = t.calories - c, remP = t.protein - p;
+    const calPct = Math.max(0, Math.min(1, c / t.calories));
+    const proPct = Math.max(0, Math.min(1, p / t.protein));
+    const over = remC < 0;
+
+    const now = new Date();
+    const h = now.getHours();
+    const greeting = (h<12? 'Good morning' : h<18? 'Good afternoon' : 'Good evening') + ' \u{1F44B}';
+    const vd = parseKey(state.viewKey);
+    const isToday = state.viewKey === todayKey();
+    const y2 = new Date(); y2.setDate(y2.getDate()-1);
+    const headline = isToday ? "TODAY'S FUEL" : (state.viewKey===keyOf(y2) ? "YESTERDAY" : vd.toLocaleDateString(undefined,{weekday:'long'}).toUpperCase());
+    const dow3 = vd.toLocaleDateString(undefined,{weekday:'short'}).toUpperCase();
+    const dateSub = state.viewKey + ' \u00B7 ' + dow3;
+
+    const centerNum = Math.round(Math.abs(remC));
+    const centerLabel = over ? 'OVER' : 'REMAINING';
+    const centerColor = over ? 'var(--pink)' : 'var(--text)';
+    const calRingColor = over ? 'var(--pink)' : 'var(--blue)';
+    const calOffset = (628.3 * (1 - calPct)).toFixed(1);
+    const proOffset = (490.1 * (1 - proPct)).toFixed(1);
+
+    const calMonthLabel = new Date(state.calMonth.y, state.calMonth.m, 1).toLocaleDateString(undefined,{month:'long', year:'numeric'});
+    const calDays = buildCalDays();
+    const dow = ['S','M','T','W','T','F','S'];
+
+    let html = '';
+
+    // header
+    html += `<div class="hdr">
+      <div>
+        <div class="greeting">${esc(greeting)}</div>
+        <div class="headline">${esc(headline)}</div>
+        <div class="datesub">${esc(dateSub)}</div>
+      </div>
+      <div class="hdr-btns">
+        <button class="navbtn" onclick="App.goDay(-1)">\u2039</button>
+        <button class="calbtn" onclick="App.toggleCal()">\u{1F4C5}</button>
+        <button class="navbtn" ${isToday?'disabled':''} onclick="App.goDay(1)">\u203A</button>
+      </div>`;
+
+    if(state.showCal){
+      html += `<div class="calpop">
+        <div class="calpop-hdr">
+          <button onclick="App.calPrev()">\u2039</button>
+          <span>${esc(calMonthLabel)}</span>
+          <button onclick="App.calNext()">\u203A</button>
+        </div>
+        <div class="calgrid">`;
+      dow.forEach(d => { html += `<div class="dow">${d}</div>`; });
+      calDays.forEach(d => {
+        if(d.empty){ html += `<div></div>`; return; }
+        let cls = 'day';
+        if(d.isToday) cls += ' today';
+        if(d.isSel) cls += ' sel';
+        if(d.isFuture) cls += ' future'; else if(!d.isSel) cls += ' clickable';
+        const onclick = (!d.isFuture) ? `onclick="App.pickDay('${d.key}')"` : '';
+        html += `<div class="${cls}" ${onclick}>${d.label}</div>`;
+      });
+      html += `</div></div>`;
+    }
+    html += `</div>`; // .hdr
+
+    // dial hero
+    html += `<div class="dial-wrap">
+      <div class="dial">
+        <svg width="232" height="232" viewBox="0 0 232 232" style="transform:rotate(-90deg);">
+          <circle cx="116" cy="116" r="100" fill="none" stroke="#12203a" stroke-width="16"/>
+          <circle cx="116" cy="116" r="100" fill="none" stroke="${calRingColor}" stroke-width="16" stroke-linecap="round" stroke-dasharray="628.3" stroke-dashoffset="${calOffset}"/>
+          <circle cx="116" cy="116" r="78" fill="none" stroke="#331229" stroke-width="12"/>
+          <circle cx="116" cy="116" r="78" fill="none" stroke="var(--pink)" stroke-width="12" stroke-linecap="round" stroke-dasharray="490.1" stroke-dashoffset="${proOffset}"/>
+        </svg>
+        <div class="dial-center">
+          <div class="lbl">${centerLabel}</div>
+          <div class="num" style="color:${centerColor};">${centerNum}</div>
+          <div class="unit">kcal</div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="dot" style="background:var(--blue);"></span><span class="txt">${Math.round(c)} / ${t.calories}</span></div>
+        <div class="legend-item"><span class="dot" style="background:var(--pink);"></span><span class="txt">${Math.round(p)} / ${t.protein}g pro</span></div>
+      </div>
+    </div>`;
+
+    // targets panel
+    if(state.showTargets){
+      html += `<div class="panel">
+        <div class="panel-row"><label>CAL TARGET</label><input id="ft-tcal" type="number"></div>
+        <div class="panel-row"><label>PROTEIN TARGET</label><input id="ft-tpro" type="number"></div>
+        <button class="btn-primary" onclick="App.saveTargets()">Save targets</button>
+      </div>`;
+    }
+
+    // coach panel
+    html += `<div class="coach">
+      <div class="coach-hdr">
+        <div class="coach-hdr-left"><div class="coach-badge">C</div><span>COACH</span></div>
+        <button class="coach-settings-btn" onclick="App.toggleAiSettings()">Settings</button>
+      </div>`;
+    if(state.showAiSettings){
+      html += `<div class="coach-settings-panel">
+        <label>Worker URL (from your Cloudflare Worker deploy)</label>
+        <div class="row">
+          <input type="text" id="ft-worker-url" placeholder="https://your-worker.your-name.workers.dev">
+          <button onclick="App.saveAiSettings()">Save</button>
+        </div>
+      </div>`;
+    }
+    if(state.chat.length){
+      html += `<div class="chatlist">`;
+      state.chat.forEach(m => {
+        const cls = m.role==='user' ? 'chat-user' : m.role==='loading' ? 'chat-loading' : 'chat-ai';
+        html += `<div class="${cls}">${esc(m.text)}</div>`;
+      });
+      html += `</div>`;
+    } else {
+      const hint = `You've got ${Math.round(Math.max(0,remC))} kcal and ${Math.round(Math.max(0,remP))}g protein left. Ask me what to eat, or whether you can fit something in.`;
+      html += `<div class="chat-hint">${esc(hint)}</div>`;
+    }
+    html += `<div class="coach-input-row">
+        <input type="text" id="ft-coach" placeholder="Ask about today…" onkeydown="if(event.key==='Enter')App.ask()">
+        <button class="coach-send" ${state.asking?'disabled':''} onclick="App.ask()">\u2192</button>
+      </div>
+    </div>`;
+
+    // add food panel
+    if(state.addOpen){
+      html += `<div class="panel addfood">
+        <div class="namewrap">
+          <input type="text" id="ft-name" autocomplete="off" placeholder="Food name" oninput="App.nameInput(event)">`;
+      if(state.suggestions.length){
+        html += `<div class="suggestbox">`;
+        state.suggestions.forEach((f,i) => {
+          html += `<div class="suggest-item" onclick="App.fillSuggestion(${i})"><span>${esc(f.name)}</span><span class="macro">${Math.round(f.cal)} / ${Math.round(f.pro)}g</span></div>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>
+        <div class="addfood-row">
+          <input type="number" id="ft-cal" placeholder="kcal">
+          <input type="number" id="ft-pro" placeholder="protein g">
+          <button onclick="App.submitAdd()">Add</button>
+        </div>
+      </div>`;
+    }
+
+    // action row
+    html += `<div class="actionrow">
+      <button class="btn-log" onclick="App.toggleAdd()">${state.addOpen ? 'CLOSE' : '+ LOG FOOD'}</button>
+      <button class="btn-gear" onclick="App.toggleTargets()">\u2699</button>
+    </div>`;
+
+    // entries
+    html += `<div class="entries-hdr"><span>LOGGED \u00B7 ${state.entries.length}</span><span>KCAL / PRO</span></div>`;
+    if(state.entries.length){
+      html += `<div>`;
+      state.entries.forEach(e => {
+        html += `<div class="entry-row">
+          <span class="name">${esc(e.name)}</span>
+          <span class="macro">${Math.round(e.cal)} / ${Math.round(e.pro)}g</span>
+          <button class="del" onclick="App.deleteEntry('${e.id}')">\u00D7</button>
+        </div>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<div class="empty-state">Nothing logged yet \u2014 tap Log food to start.</div>`;
+    }
+
+    html += `<div class="cleardayrow"><button onclick="App.clearDay()">Clear this day</button></div>`;
+    html += `<div class="datarow">
+      <button onclick="App.exportData()">Export data</button>
+      <span class="sep">\u00B7</span>
+      <button onclick="App.triggerImport()">Import data</button>
+    </div>
+    <input type="file" id="ft-import-file" accept="application/json" style="display:none">`;
+
+    return html;
+  }
+
+  // ---------- export / import ----------
+  function exportData(){
+    const data = {};
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const key = localStorage.key(i);
+        if(key && key.indexOf('fuel-')===0){
+          data[key] = localStorage.getItem(key);
+        }
+      }
+    }catch(e){}
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'fuel-tracker-backup-' + todayKey() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function triggerImport(){
+    const input = document.getElementById('ft-import-file');
+    if(!input) return;
+    input.value = '';
+    input.onchange = () => {
+      const file = input.files && input.files[0];
+      if(file) importDataFile(file);
+    };
+    input.click();
+  }
+  function importDataFile(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try{ data = JSON.parse(reader.result); }
+      catch(e){ alert('Import failed: that file is not valid JSON.'); return; }
+      if(!data || typeof data !== 'object'){ alert('Import failed: unexpected file format.'); return; }
+      const keys = Object.keys(data).filter(k => k.indexOf('fuel-')===0);
+      if(!keys.length){ alert('Import failed: no Fuel Tracker data found in that file.'); return; }
+      if(!confirm('This will overwrite your current entries, targets, and food library with the contents of this backup. Continue?')) return;
+      keys.forEach(k => lsSet(k, data[k]));
+      init();
+      alert('Import complete \u2014 your data has been restored.');
+    };
+    reader.onerror = () => alert('Import failed: could not read that file.');
+    reader.readAsText(file);
+  }
+
+  // ---------- public API (used by inline onclick handlers) ----------
+  window.App = {
+    goDay, pickDay,
+    toggleCal(){ state.showCal = !state.showCal; render(); },
+    calPrev(){ const m=state.calMonth.m-1; const d=new Date(state.calMonth.y, m, 1); state.calMonth={y:d.getFullYear(), m:d.getMonth()}; render(); },
+    calNext(){ const m=state.calMonth.m+1; const d=new Date(state.calMonth.y, m, 1); state.calMonth={y:d.getFullYear(), m:d.getMonth()}; render(); },
+    toggleTargets, saveTargets,
+    toggleAiSettings, saveAiSettings,
+    toggleAdd(){ state.addOpen = !state.addOpen; state.suggestions = []; render(); },
+    submitAdd, nameInput,
+    fillSuggestion(i){ fillSuggestion(state.suggestions[i]); },
+    ask,
+    deleteEntry(id){ persistEntries(state.entries.filter(x=>x.id!==id)); },
+    clearDay(){ persistEntries([]); },
+    exportData, triggerImport
+  };
+
   init();
 })();
 </script>
+
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
