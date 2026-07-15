@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Fuel Tracker</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#101216">
+
+<!-- iOS "Add to Home Screen" behaviour -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fuel">
+<link rel="apple-touch-icon" href="icon-180.png">
+
+<style>
+  html, body { background:#101216; margin:0; padding:0; }
+</style>
+</head>
+<body>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+  :root{
+    --bg:#101216;
+    --panel:#191c22;
+    --panel-2:#20242c;
+    --line:#2a2f39;
+    --text:#f3f4f6;
+    --muted:#828a99;
+    --muted-2:#5b6272;
+    --cal:#ff6a3d;
+    --cal-track:#33241c;
+    --pro:#33e2bb;
+    --pro-track:#183430;
+    --danger:#ff5c5c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  .wrap{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',-apple-system,sans-serif;
+    padding:24px;
+    border-radius:16px;
+    max-width:620px;
+    margin:0 auto;
+  }
+  h1{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;letter-spacing:0.5px;margin:0;text-transform:uppercase;}
+
+  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .daynav{display:flex;align-items:center;gap:10px;position:relative;}
+  .nav-btn{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;}
+  .nav-btn:hover{color:var(--text);border-color:var(--muted-2);}
+  .nav-btn:disabled{opacity:0.3;cursor:default;}
+  .nav-btn:disabled:hover{color:var(--muted);border-color:var(--line);}
+  .date-label{font-size:14px;color:var(--muted);min-width:118px;text-align:center;cursor:pointer;user-select:none;}
+  .date-label:hover{color:var(--text);}
+
+  .cal-popover{
+    position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:14px;width:260px;z-index:20;display:none;box-shadow:0 12px 28px rgba(0,0,0,0.4);
+  }
+  .cal-popover.open{display:block;}
+  .cal-month-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cal-month-row span{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .cal-dow{font-size:10px;color:var(--muted-2);text-align:center;padding-bottom:4px;text-transform:uppercase;}
+  .cal-day{
+    position:relative;font-size:12px;text-align:center;padding:6px 0;border-radius:6px;cursor:pointer;color:var(--text);
+  }
+  .cal-day:hover{background:var(--panel);}
+  .cal-day.empty{cursor:default;}
+  .cal-day.empty:hover{background:none;}
+  .cal-day.today{border:1px solid var(--muted-2);}
+  .cal-day.selected{background:var(--cal);color:#2a1208;font-weight:600;}
+  .cal-day.future{color:var(--muted-2);cursor:default;}
+  .cal-day.future:hover{background:none;}
+  .cal-dot{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:var(--pro);}
+  .cal-day.selected .cal-dot{background:#2a1208;}
+
+  .stats{display:flex;gap:14px;margin-bottom:18px;}
+  .stat-card{
+    flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:16px;display:flex;align-items:center;gap:14px;
+  }
+  .ring-wrap{position:relative;width:76px;height:76px;flex-shrink:0;}
+  .ring-wrap svg{transform:rotate(-90deg);}
+  .ring-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;}
+  .stat-info .lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px;}
+  .stat-info .amt{font-family:'Oswald',sans-serif;font-size:19px;font-weight:600;}
+  .stat-info .amt small{font-family:'Inter';font-size:12px;color:var(--muted);font-weight:400;}
+  .stat-info .msg{font-size:12px;margin-top:3px;color:var(--muted);}
+
+  .panel-block{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;}
+  .targets-row{display:flex;align-items:center;gap:10px;}
+  .targets-row label{font-size:12px;color:var(--muted);}
+  .targets-row input{width:80px;}
+
+  input[type=text],input[type=number]{
+    background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:10px 12px;font-family:'Inter';font-size:14px;width:100%;
+  }
+  input:focus{outline:none;border-color:var(--cal);}
+
+  .add-row{display:flex;gap:8px;margin-bottom:16px;}
+  .autocomplete-wrap{position:relative;flex:2;min-width:0;}
+  .add-row input[type=number]{flex:1;min-width:0;}
+  .suggestions{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel-2);
+    border:1px solid var(--line);border-radius:8px;max-height:180px;overflow-y:auto;z-index:10;display:none;
+  }
+  .suggestions.open{display:block;}
+  .suggestion-item{display:flex;justify-content:space-between;padding:8px 10px;cursor:pointer;font-size:13px;}
+  .suggestion-item:hover,.suggestion-item.active{background:var(--panel);}
+  .suggestion-item .s-macro{color:var(--muted);font-size:12px;}
+
+  button{font-family:'Oswald',sans-serif;letter-spacing:0.5px;border:none;border-radius:8px;cursor:pointer;transition:transform .1s;}
+  button:active{transform:scale(0.97);}
+  .btn-add{background:var(--cal);color:#2a1208;font-weight:600;padding:0 18px;font-size:13px;text-transform:uppercase;}
+  .btn-add:hover{filter:brightness(1.08);}
+
+  .log-hdr{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:0 2px 10px;}
+  .entry{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-top:1px solid var(--line);font-size:14px;}
+  .entry:first-of-type{border-top:none;}
+  .entry .name{flex:1;}
+  .entry .macro{width:90px;text-align:right;color:var(--muted);font-size:12px;}
+  .entry .del{background:none;color:var(--muted-2);font-size:16px;width:24px;height:24px;line-height:1;}
+  .entry .del:hover{color:var(--danger);}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0;}
+
+  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
+  .link-btn{background:none;color:var(--muted);font-size:12px;font-family:'Inter';padding:4px;}
+  .link-btn:hover{color:var(--text);}
+
+  .ai-panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px;}
+  .ai-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .ai-hdr .dot{width:8px;height:8px;border-radius:50%;background:var(--pro);}
+  .ai-hdr span{font-family:'Oswald',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+  .ai-messages{max-height:260px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:8px;}
+  .ai-msg{padding:9px 12px;border-radius:10px;font-size:13.5px;line-height:1.45;max-width:88%;white-space:pre-wrap;}
+  .ai-msg.user{background:var(--panel-2);align-self:flex-end;color:var(--text);}
+  .ai-msg.ai{background:var(--cal-track);align-self:flex-start;color:var(--text);border:1px solid var(--line);}
+  .ai-msg.loading{color:var(--muted);font-style:italic;}
+  .ai-empty{color:var(--muted-2);font-size:13px;padding:6px 2px 12px;}
+  .ai-input-row{display:flex;gap:8px;}
+  .ai-input-row input{flex:1;}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <h1>Fuel log</h1>
+    <div class="daynav">
+      <button class="nav-btn" id="prev-day" aria-label="Previous day">‹</button>
+      <div class="date-label" id="date-label">Today</div>
+      <button class="nav-btn" id="next-day" aria-label="Next day">›</button>
+      <button class="nav-btn" id="cal-toggle" aria-label="Open calendar">▾</button>
+      <div class="cal-popover" id="cal-popover">
+        <div class="cal-month-row">
+          <button class="nav-btn" id="cal-prev-month">‹</button>
+          <span id="cal-month-label"></span>
+          <button class="nav-btn" id="cal-next-month">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="ring-wrap">
+        <svg width="76" height="76" viewBox="0 0 76 76">
+          <circle cx="38" cy="38" r="32" fill="none" stroke="var(--cal-track)" stroke-width="8"/>
+          <circle id="cal-ring" cx="38" cy="38" r="32" fill="none" stroke="var(--cal)" stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"/>
+        </svg>
+        <div class="ring-center" id="cal-pct">0%</div>
+      </div>
+      <div class="stat-info">
+        <div class="lbl">Calories</div>
+        <div class="amt"><span id="cal-current">0</span> <small>/ <span id="cal-target">1800</span> kcal</small></div>
+        <div class="msg" id="cal-status"></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="ring-wrap">
+        <svg width="76" height="76" viewBox="0 0 76 76">
+          <circle cx="38" cy="38" r="32" fill="none" stroke="var(--pro-track)" stroke-width="8"/>
+          <circle id="pro-ring" cx="38" cy="38" r="32" fill="none" stroke="var(--pro)" stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"/>
+        </svg>
+        <div class="ring-center" id="pro-pct">0%</div>
+      </div>
+      <div class="stat-info">
+        <div class="lbl">Protein</div>
+        <div class="amt"><span id="pro-current">0</span> <small>/ <span id="pro-target">150</span> g</small></div>
+        <div class="msg" id="pro-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-block" id="targets-panel" style="display:none;">
+    <div class="targets-row">
+      <label>Calorie target</label>
+      <input type="number" id="cal-target-input" value="1800">
+      <label>Protein target</label>
+      <input type="number" id="pro-target-input" value="150">
+      <button class="btn-add" id="save-targets" style="margin-left:auto;">Save</button>
+    </div>
+  </div>
+
+  <div class="add-row">
+    <div class="autocomplete-wrap">
+      <input type="text" id="food-name" placeholder="Chicken breast" autocomplete="off">
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+    <input type="number" id="food-cal" placeholder="kcal">
+    <input type="number" id="food-pro" placeholder="protein g">
+    <button class="btn-add" id="add-btn">Log it</button>
+  </div>
+
+  <div class="log-hdr"><span>Entries</span><span>kcal / protein</span></div>
+  <div id="entries-list"></div>
+  <div class="empty" id="empty-msg">Nothing logged yet — add your first item above.</div>
+
+  <div class="foot">
+    <button class="link-btn" id="toggle-targets">Edit targets</button>
+    <button class="link-btn" id="reset-day">Clear this day</button>
+  </div>
+
+  <div class="ai-panel">
+    <div class="ai-hdr" style="justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:8px;"><div class="dot"></div><span>Ask about today</span></div>
+      <button class="link-btn" id="toggle-ai-settings" style="text-transform:none;letter-spacing:0;">Settings</button>
+    </div>
+    <div class="panel-block" id="ai-settings-panel" style="display:none;margin-bottom:12px;">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Worker URL (from your Cloudflare Worker deploy)</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="ai-worker-url" placeholder="https://your-worker.your-name.workers.dev">
+        <button class="btn-add" id="save-ai-settings">Save</button>
+      </div>
+    </div>
+    <div class="ai-messages" id="ai-messages"></div>
+    <div class="ai-empty" id="ai-empty">Try "what should I have for lunch?" or "can I still fit in a beer tonight?" — it knows your targets and what you've logged today.</div>
+    <div class="ai-input-row">
+      <input type="text" id="ai-input" placeholder="Ask a question...">
+      <button class="btn-add" id="ai-send">Ask</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const RING_CIRC = 201;
+  const TARGETS_KEY = 'fuel-targets';
+  const LIBRARY_KEY = 'fuel-food-library';
+  const entryKey = (d) => 'fuel-entries:'+d;
+
+  // Plain localStorage — this runs in a real browser now, not the artifact sandbox,
+  // so there's no rate limiting or transient failures to retry around.
+  async function storageGet(key){
+    try{
+      const v = localStorage.getItem(key);
+      return v === null ? null : {value: v};
+    }catch(e){
+      console.error('read failed', e);
+      return null;
+    }
+  }
+
+  async function storageSet(key, value){
+    try{
+      localStorage.setItem(key, value);
+      return true;
+    }catch(e){
+      console.error('save failed', e);
+      showSaveError();
+      return false;
+    }
+  }
+
+  async function storageList(prefix){
+    try{
+      const keys = Object.keys(localStorage).filter(k => k.startsWith(prefix));
+      return {keys};
+    }catch(e){
+      console.error('list failed', e);
+      return null;
+    }
+  }
+
+  let saveErrorTimeout = null;
+  function showSaveError(){
+    let banner = document.getElementById('save-error-banner');
+    if(!banner){
+      banner = document.createElement('div');
+      banner.id = 'save-error-banner';
+      banner.style.cssText = 'background:var(--danger);color:#3a0d0d;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:12px;text-align:center;';
+      banner.textContent = "Couldn't save that — check your connection and try again.";
+      document.querySelector('.wrap').insertBefore(banner, document.querySelector('.head'));
+    }
+    clearTimeout(saveErrorTimeout);
+    saveErrorTimeout = setTimeout(() => { banner.remove(); }, 5000);
+  }
+
+  let viewDate = new Date();
+  viewDate.setHours(0,0,0,0);
+  let calendarMonth = new Date(viewDate);
+  let targets = {calories:1800, protein:150};
+  let entries = [];
+  let library = {};
+  let loggedDates = new Set();
+  let activeIndex = -1;
+
+  function dateKey(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function isSameDay(a,b){ return dateKey(a) === dateKey(b); }
+  function todayDate(){ const t = new Date(); t.setHours(0,0,0,0); return t; }
+
+  function formatLabel(d){
+    const t = todayDate();
+    const yest = new Date(t); yest.setDate(t.getDate()-1);
+    if(isSameDay(d,t)) return 'Today';
+    if(isSameDay(d,yest)) return 'Yesterday';
+    return d.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+  }
+
+  async function loadTargets(){
+    const r = await storageGet(TARGETS_KEY);
+    if(r && r.value){
+      try{ targets = JSON.parse(r.value); }catch(e){}
+    }
+    document.getElementById('cal-target-input').value = targets.calories;
+    document.getElementById('pro-target-input').value = targets.protein;
+  }
+
+  async function saveTargets(){
+    await storageSet(TARGETS_KEY, JSON.stringify(targets));
+  }
+
+  async function loadLibrary(){
+    const r = await storageGet(LIBRARY_KEY);
+    if(r && r.value){
+      try{ library = JSON.parse(r.value); }catch(e){ library = {}; }
+    }
+  }
+
+  async function saveLibrary(){
+    await storageSet(LIBRARY_KEY, JSON.stringify(library));
+  }
+
+  async function refreshLoggedDates(){
+    const r = await storageList('fuel-entries:');
+    loggedDates = new Set();
+    if(r && r.keys){
+      r.keys.forEach(k => loggedDates.add(k.replace('fuel-entries:','')));
+    }
+  }
+
+  async function loadDay(){
+    const r = await storageGet(entryKey(dateKey(viewDate)));
+    if(r && r.value){
+      try{ entries = JSON.parse(r.value); }catch(e){ entries = []; }
+    } else {
+      entries = [];
+    }
+    render();
+  }
+
+  async function saveEntries(){
+    const ok = await storageSet(entryKey(dateKey(viewDate)), JSON.stringify(entries));
+    if(ok){ loggedDates.add(dateKey(viewDate)); }
+  }
+
+  function rememberFood(name, cal, pro){
+    library[name.toLowerCase()] = {name, cal, pro};
+    saveLibrary();
+  }
+
+  function getMatches(query){
+    const q = query.trim().toLowerCase();
+    if(!q) return [];
+    return Object.values(library).filter(f => f.name.toLowerCase().includes(q)).slice(0,6);
+  }
+
+  function renderSuggestions(matches){
+    const box = document.getElementById('suggestions');
+    activeIndex = -1;
+    box.innerHTML = '';
+    if(matches.length === 0){ box.classList.remove('open'); return; }
+    matches.forEach(f => {
+      const item = document.createElement('div');
+      item.className = 'suggestion-item';
+      item.innerHTML = '<span class="s-name"></span><span class="s-macro"></span>';
+      item.querySelector('.s-name').textContent = f.name;
+      item.querySelector('.s-macro').textContent = Math.round(f.cal)+' kcal / '+Math.round(f.pro)+'g';
+      item.addEventListener('mousedown', (e) => { e.preventDefault(); selectSuggestion(f); });
+      box.appendChild(item);
+    });
+    box.classList.add('open');
+  }
+
+  function selectSuggestion(f){
+    document.getElementById('food-name').value = f.name;
+    document.getElementById('food-cal').value = f.cal;
+    document.getElementById('food-pro').value = f.pro;
+    document.getElementById('suggestions').classList.remove('open');
+    document.getElementById('food-cal').focus();
+  }
+
+  function setRing(id, pctEl, pct){
+    const ring = document.getElementById(id);
+    const clamped = Math.max(0, Math.min(1, pct));
+    ring.setAttribute('stroke-dashoffset', (RING_CIRC * (1-clamped)).toFixed(1));
+    document.getElementById(pctEl).textContent = Math.round(clamped*100)+'%';
+  }
+
+  function render(){
+    document.getElementById('date-label').textContent = formatLabel(viewDate);
+    document.getElementById('next-day').disabled = isSameDay(viewDate, todayDate());
+
+    const list = document.getElementById('entries-list');
+    const empty = document.getElementById('empty-msg');
+    list.innerHTML = '';
+    if(entries.length === 0){
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      entries.forEach(e => {
+        const row = document.createElement('div');
+        row.className = 'entry';
+        row.innerHTML = '<span class="name"></span><span class="macro"></span><button class="del" aria-label="Delete entry">\u00d7</button>';
+        row.querySelector('.name').textContent = e.name;
+        row.querySelector('.macro').textContent = Math.round(e.cal)+' / '+Math.round(e.pro)+'g';
+        row.querySelector('.del').addEventListener('click', () => {
+          entries = entries.filter(x => x.id !== e.id);
+          saveEntries();
+          render();
+        });
+        list.appendChild(row);
+      });
+    }
+
+    const totalCal = entries.reduce((s,e)=>s+Number(e.cal||0),0);
+    const totalPro = entries.reduce((s,e)=>s+Number(e.pro||0),0);
+
+    document.getElementById('cal-current').textContent = Math.round(totalCal);
+    document.getElementById('pro-current').textContent = Math.round(totalPro);
+    document.getElementById('cal-target').textContent = targets.calories;
+    document.getElementById('pro-target').textContent = targets.protein;
+
+    setRing('cal-ring','cal-pct', totalCal/targets.calories);
+    setRing('pro-ring','pro-pct', totalPro/targets.protein);
+
+    const calStatus = document.getElementById('cal-status');
+    const remCal = targets.calories - totalCal;
+    calStatus.textContent = remCal >= 0 ? Math.round(remCal)+' kcal left' : Math.round(-remCal)+' kcal over';
+    calStatus.style.color = remCal >= 0 ? 'var(--muted)' : 'var(--danger)';
+
+    const proStatus = document.getElementById('pro-status');
+    const remPro = targets.protein - totalPro;
+    proStatus.textContent = remPro > 0 ? Math.round(remPro)+'g to go' : 'Target hit';
+    proStatus.style.color = remPro > 0 ? 'var(--muted)' : 'var(--pro)';
+  }
+
+  function renderCalendarGrid(){
+    document.getElementById('cal-month-label').textContent = calendarMonth.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+    ['S','M','T','W','T','F','S'].forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'cal-dow';
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+    const firstOfMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+    const startOffset = firstOfMonth.getDay();
+    const daysInMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth()+1, 0).getDate();
+    const today = todayDate();
+
+    for(let i=0;i<startOffset;i++){
+      const filler = document.createElement('div');
+      filler.className = 'cal-day empty';
+      grid.appendChild(filler);
+    }
+    for(let day=1; day<=daysInMonth; day++){
+      const d = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), day);
+      const cell = document.createElement('div');
+      cell.className = 'cal-day';
+      cell.textContent = day;
+      if(d > today){ cell.classList.add('future'); }
+      if(isSameDay(d, today)){ cell.classList.add('today'); }
+      if(isSameDay(d, viewDate)){ cell.classList.add('selected'); }
+      if(loggedDates.has(dateKey(d))){
+        const dot = document.createElement('div');
+        dot.className = 'cal-dot';
+        cell.appendChild(dot);
+      }
+      if(d <= today){
+        cell.addEventListener('click', () => {
+          viewDate = d;
+          document.getElementById('cal-popover').classList.remove('open');
+          loadDay();
+        });
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  document.getElementById('add-btn').addEventListener('click', () => {
+    const name = document.getElementById('food-name').value.trim();
+    const cal = Number(document.getElementById('food-cal').value);
+    const pro = Number(document.getElementById('food-pro').value) || 0;
+    if(!name || !cal){ return; }
+    entries.push({id: Date.now()+'-'+Math.random().toString(36).slice(2), name, cal, pro});
+    rememberFood(name, cal, pro);
+    saveEntries();
+    document.getElementById('food-name').value = '';
+    document.getElementById('food-cal').value = '';
+    document.getElementById('food-pro').value = '';
+    document.getElementById('suggestions').classList.remove('open');
+    document.getElementById('food-name').focus();
+    render();
+  });
+
+  const nameInput = document.getElementById('food-name');
+  const suggestBox = document.getElementById('suggestions');
+
+  nameInput.addEventListener('input', () => renderSuggestions(getMatches(nameInput.value)));
+  nameInput.addEventListener('focus', () => { if(nameInput.value.trim()) renderSuggestions(getMatches(nameInput.value)); });
+  nameInput.addEventListener('keydown', (e) => {
+    const items = suggestBox.querySelectorAll('.suggestion-item');
+    if(!suggestBox.classList.contains('open') || items.length === 0){ return; }
+    if(e.key === 'ArrowDown'){ e.preventDefault(); activeIndex = Math.min(activeIndex+1, items.length-1); items.forEach((it,i)=>it.classList.toggle('active', i===activeIndex)); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); activeIndex = Math.max(activeIndex-1, 0); items.forEach((it,i)=>it.classList.toggle('active', i===activeIndex)); }
+    else if(e.key === 'Enter'){ if(activeIndex >= 0){ e.preventDefault(); items[activeIndex].dispatchEvent(new Event('mousedown')); } }
+    else if(e.key === 'Escape'){ suggestBox.classList.remove('open'); }
+  });
+
+  document.getElementById('toggle-targets').addEventListener('click', () => {
+    const panel = document.getElementById('targets-panel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+  document.getElementById('save-targets').addEventListener('click', () => {
+    targets = {
+      calories: Number(document.getElementById('cal-target-input').value) || targets.calories,
+      protein: Number(document.getElementById('pro-target-input').value) || targets.protein
+    };
+    saveTargets();
+    document.getElementById('targets-panel').style.display = 'none';
+    render();
+  });
+  document.getElementById('reset-day').addEventListener('click', () => {
+    entries = [];
+    saveEntries();
+    render();
+  });
+
+  document.getElementById('prev-day').addEventListener('click', () => {
+    viewDate.setDate(viewDate.getDate()-1);
+    viewDate = new Date(viewDate);
+    calendarMonth = new Date(viewDate);
+    loadDay();
+  });
+  document.getElementById('next-day').addEventListener('click', () => {
+    if(isSameDay(viewDate, todayDate())) return;
+    viewDate.setDate(viewDate.getDate()+1);
+    viewDate = new Date(viewDate);
+    calendarMonth = new Date(viewDate);
+    loadDay();
+  });
+
+  document.getElementById('cal-toggle').addEventListener('click', () => {
+    calendarMonth = new Date(viewDate);
+    renderCalendarGrid();
+    document.getElementById('cal-popover').classList.toggle('open');
+  });
+  document.getElementById('date-label').addEventListener('click', () => {
+    calendarMonth = new Date(viewDate);
+    renderCalendarGrid();
+    document.getElementById('cal-popover').classList.toggle('open');
+  });
+  document.getElementById('cal-prev-month').addEventListener('click', () => {
+    calendarMonth.setMonth(calendarMonth.getMonth()-1);
+    calendarMonth = new Date(calendarMonth);
+    renderCalendarGrid();
+  });
+  document.getElementById('cal-next-month').addEventListener('click', () => {
+    calendarMonth.setMonth(calendarMonth.getMonth()+1);
+    calendarMonth = new Date(calendarMonth);
+    renderCalendarGrid();
+  });
+
+  document.addEventListener('click', (e) => {
+    const wrap = document.querySelector('.daynav');
+    if(!wrap.contains(e.target)){
+      document.getElementById('cal-popover').classList.remove('open');
+    }
+    if(!nameInput.contains(e.target) && !suggestBox.contains(e.target)){
+      suggestBox.classList.remove('open');
+    }
+  });
+
+  const WORKER_URL_KEY = 'fuel-ai-worker-url';
+  let workerUrl = localStorage.getItem(WORKER_URL_KEY) || '';
+
+  document.getElementById('toggle-ai-settings').addEventListener('click', () => {
+    const panel = document.getElementById('ai-settings-panel');
+    document.getElementById('ai-worker-url').value = workerUrl;
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+  document.getElementById('save-ai-settings').addEventListener('click', () => {
+    workerUrl = document.getElementById('ai-worker-url').value.trim();
+    localStorage.setItem(WORKER_URL_KEY, workerUrl);
+    document.getElementById('ai-settings-panel').style.display = 'none';
+  });
+
+  let chatHistory = [];
+
+  function buildContext(){
+    const totalCal = entries.reduce((s,e)=>s+Number(e.cal||0),0);
+    const totalPro = entries.reduce((s,e)=>s+Number(e.pro||0),0);
+    const remCal = Math.max(0, targets.calories - totalCal);
+    const remPro = Math.max(0, targets.protein - totalPro);
+    const loggedList = entries.length
+      ? entries.map(e => `${e.name} (${Math.round(e.cal)} kcal, ${Math.round(e.pro)}g protein)`).join('; ')
+      : 'nothing yet';
+    const commonFoods = Object.values(library).slice(0, 20)
+      .map(f => `${f.name} (${Math.round(f.cal)} kcal, ${Math.round(f.pro)}g protein)`).join('; ');
+
+    return `You are a blunt, practical nutrition assistant inside a calorie/protein tracking app. Keep answers short (2-4 sentences max), specific, and actionable — no fluff, no disclaimers, no "consult a doctor". This person is on a cutting phase.
+
+Viewing date: ${formatLabel(viewDate)} (${dateKey(viewDate)})
+Daily target: ${targets.calories} kcal, ${targets.protein}g protein
+Eaten so far: ${Math.round(totalCal)} kcal, ${Math.round(totalPro)}g protein
+Remaining budget: ${Math.round(remCal)} kcal, ${Math.round(remPro)}g protein
+Logged today: ${loggedList}
+Foods this person logs regularly (use these for suggestions where sensible): ${commonFoods || 'none saved yet'}
+
+Answer the person's question using this context. If they ask what to eat, give 1-2 concrete options that fit their remaining budget, ideally from their regular foods.`;
+  }
+
+  function appendMessage(role, text){
+    document.getElementById('ai-empty').style.display = 'none';
+    const box = document.getElementById('ai-messages');
+    const el = document.createElement('div');
+    el.className = 'ai-msg ' + role;
+    el.textContent = text;
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+    return el;
+  }
+
+  async function askAI(){
+    const input = document.getElementById('ai-input');
+    const question = input.value.trim();
+    if(!question) return;
+
+    if(!workerUrl){
+      appendMessage('user', question);
+      appendMessage('ai', "No Worker URL set yet — tap Settings above and paste in your Cloudflare Worker URL first.");
+      input.value = '';
+      return;
+    }
+
+    input.value = '';
+    appendMessage('user', question);
+    const loadingEl = appendMessage('ai loading', 'Thinking...');
+    document.getElementById('ai-send').disabled = true;
+
+    chatHistory.push({role:'user', content: question});
+
+    try{
+      const response = await fetch(workerUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          system: buildContext(),
+          messages: chatHistory
+        })
+      });
+      const data = await response.json();
+      const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text);
+      const answer = textBlocks.join('\n').trim() || "Couldn't get a straight answer there, try rephrasing.";
+      loadingEl.remove();
+      appendMessage('ai', answer);
+      chatHistory.push({role:'assistant', content: answer});
+      if(chatHistory.length > 12){ chatHistory = chatHistory.slice(-12); }
+    }catch(e){
+      loadingEl.remove();
+      appendMessage('ai', "Couldn't reach the Worker — check the URL in Settings and your connection.");
+      chatHistory.pop();
+    }
+    document.getElementById('ai-send').disabled = false;
+  }
+
+  document.getElementById('ai-send').addEventListener('click', askAI);
+  document.getElementById('ai-input').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter'){ askAI(); }
+  });
+
+  async function init(){
+    await loadLibrary();
+    await loadTargets();
+    await refreshLoggedDates();
+    await loadDay();
+  }
+  init();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(e => console.warn('SW registration failed', e));
+  });
+}
+</script>
+</body>
+</html>
