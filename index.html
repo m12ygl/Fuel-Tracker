@@ -138,8 +138,6 @@
   .themesheet-close{width:30px;height:30px;border:1px solid var(--bd,#1e2330);background:var(--scr,#0b0d12);border-radius:8px;color:#7d879b;font-size:16px;cursor:pointer;}
   .themegrid{overflow-y:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-bottom:4px;}
   .themeswatch{position:relative;aspect-ratio:1/1;padding:0;border-radius:16px;cursor:pointer;overflow:hidden;border:none;}
-  .themeswatch .dot{position:absolute;top:8px;left:8px;width:14px;height:14px;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,0.4);}
-  .themeswatch .label{position:absolute;left:10px;bottom:9px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.5px;color:#fff;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
   .themeswatch .check{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:#111;font-weight:700;}
 </style>
 </head>
@@ -856,8 +854,6 @@
         const bg = `radial-gradient(130% 120% at 28% 12%, ${t.accent}, hsl(${t.h} 55% 24%) 55%, hsl(${t.h} 45% 12%) 100%)`;
         const shadow = sel ? `0 0 0 2.5px #fff, 0 6px 18px ${t.accent}55` : 'inset 0 0 0 1px rgba(255,255,255,0.08)';
         html += `<button class="themeswatch" style="background:${bg};box-shadow:${shadow};" onclick="App.pickTheme(${i})">
-          <span class="dot" style="background:${t.chip2};"></span>
-          <span class="label">${esc(t.name)}</span>
           ${sel ? '<span class="check">\u2713</span>' : ''}
         </button>`;
       });
