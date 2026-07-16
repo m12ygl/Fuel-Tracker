@@ -852,7 +852,7 @@
         const p2 = pal(i);
         const sel = i === state.themeIdx;
         const bg = `radial-gradient(130% 120% at 28% 12%, ${t.accent}, hsl(${t.h} 55% 24%) 55%, hsl(${t.h} 45% 12%) 100%)`;
-        const shadow = sel ? `0 0 0 2.5px #fff, 0 6px 18px ${t.accent}55` : 'inset 0 0 0 1px rgba(255,255,255,0.08)';
+        const shadow = sel ? `0 6px 18px ${t.accent}55` : 'inset 0 0 0 1px rgba(255,255,255,0.08)';
         html += `<button class="themeswatch" style="background:${bg};box-shadow:${shadow};" onclick="App.pickTheme(${i})">
           ${sel ? '<span class="check">\u2713</span>' : ''}
         </button>`;
