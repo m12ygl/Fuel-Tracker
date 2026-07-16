@@ -542,19 +542,42 @@
     reader.onload = () => {
       try{
         const data = JSON.parse(reader.result);
-        if(!data || data.app !== 'fuel-tracker') throw new Error('bad');
-        if(data.targets) lsSet(TARGETS_KEY, JSON.stringify(data.targets));
-        if(data.library) lsSet(LIBRARY_KEY, JSON.stringify(data.library));
-        if(data.theme != null) lsSet(THEME_KEY, String(data.theme));
-        if(data.days){
-          Object.keys(data.days).forEach(k => {
-            const es = data.days[k];
-            if(Array.isArray(es) && es.length) lsSet(entryKey(k), JSON.stringify(es));
-          });
+        if(!data || typeof data !== 'object') throw new Error('bad');
+
+        if(data.app === 'fuel-tracker'){
+          // current export format: nested { targets, library, theme, days }
+          if(data.targets) lsSet(TARGETS_KEY, JSON.stringify(data.targets));
+          if(data.library) lsSet(LIBRARY_KEY, JSON.stringify(data.library));
+          if(data.theme != null) lsSet(THEME_KEY, String(data.theme));
+          if(data.days){
+            Object.keys(data.days).forEach(k => {
+              const es = data.days[k];
+              if(Array.isArray(es) && es.length) lsSet(entryKey(k), JSON.stringify(es));
+            });
+          }
+        } else {
+          // older export format: flat dump of raw localStorage keys
+          const keys = Object.keys(data).filter(k => k.indexOf('fuel-') === 0);
+          if(!keys.length) throw new Error('bad');
+          keys.forEach(k => lsSet(k, data[k]));
         }
-        state.targets = data.targets || state.targets;
-        state.library = data.library || state.library;
-        state.themeIdx = data.theme != null ? Number(data.theme) : state.themeIdx;
+
+        // reload everything from storage so state matches what we just wrote
+        let targets = state.targets;
+        const tRaw = lsGet(TARGETS_KEY);
+        if(tRaw){ try{ targets = JSON.parse(tRaw); }catch(e){} }
+        let library = state.library;
+        const lRaw = lsGet(LIBRARY_KEY);
+        if(lRaw){ try{ library = JSON.parse(lRaw); }catch(e){} }
+        let themeIdx = state.themeIdx;
+        const savedTheme = lsGet(THEME_KEY);
+        if(savedTheme !== null && !isNaN(Number(savedTheme))){ themeIdx = Math.max(0, Math.min(THEMES.length-1, Number(savedTheme))); }
+        const savedWorkerUrl = lsGet(WORKER_URL_KEY);
+
+        state.targets = targets;
+        state.library = library;
+        state.themeIdx = themeIdx;
+        if(savedWorkerUrl) state.workerUrl = savedWorkerUrl;
         state.entries = loadEntries(state.viewKey);
         state.loggedDates = scanLoggedDates();
         flashMsg('Imported ✓');
