@@ -258,16 +258,27 @@
     const freshNameEl = document.getElementById('ft-name');
     if(freshNameEl) freshNameEl.focus();
   }
+  function renderSuggestBox(){
+    const box = document.getElementById('ft-suggestbox');
+    if(!box) return;
+    if(!state.suggestions.length){
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+    box.style.display = 'block';
+    box.innerHTML = state.suggestions.map((f,i) =>
+      `<div class="suggest-item" onclick="App.fillSuggestion(${i})"><span>${esc(f.name)}</span><span class="macro">${Math.round(f.cal)} / ${Math.round(f.pro)}g</span></div>`
+    ).join('');
+  }
   function nameInput(e){
     const q = (e.target.value||'').trim().toLowerCase();
-    if(!q){ state.suggestions = []; render(); return; }
-    const matches = Object.values(state.library).filter(f=>f.name.toLowerCase().includes(q)).slice(0,6);
-    state.suggestions = matches;
-    render();
+    state.suggestions = q ? Object.values(state.library).filter(f=>f.name.toLowerCase().includes(q)).slice(0,6) : [];
+    renderSuggestBox();
   }
   function fillSuggestion(f){
     state.suggestions = [];
-    render();
+    renderSuggestBox();
     const nameEl = document.getElementById('ft-name');
     const calEl = document.getElementById('ft-cal');
     const proEl = document.getElementById('ft-pro');
@@ -545,15 +556,9 @@
     if(state.addOpen){
       html += `<div class="panel addfood">
         <div class="namewrap">
-          <input type="text" id="ft-name" autocomplete="off" placeholder="Food name" oninput="App.nameInput(event)">`;
-      if(state.suggestions.length){
-        html += `<div class="suggestbox">`;
-        state.suggestions.forEach((f,i) => {
-          html += `<div class="suggest-item" onclick="App.fillSuggestion(${i})"><span>${esc(f.name)}</span><span class="macro">${Math.round(f.cal)} / ${Math.round(f.pro)}g</span></div>`;
-        });
-        html += `</div>`;
-      }
-      html += `</div>
+          <input type="text" id="ft-name" autocomplete="off" placeholder="Food name" oninput="App.nameInput(event)">
+          <div class="suggestbox" id="ft-suggestbox" style="display:none;"></div>
+        </div>
         <div class="addfood-row">
           <input type="number" id="ft-cal" placeholder="kcal">
           <input type="number" id="ft-pro" placeholder="protein g">
