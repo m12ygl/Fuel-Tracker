@@ -17,133 +17,203 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
-  :root{
-    --bg:#0b0d12; --panel:#101622; --border:#1e2330;
-    --text:#f3f4f6; --body:#e8e8ea; --muted:#7d879b; --faint:#5b6272; --vfaint:#3a4150;
-    --blue:#4d8dff; --pink:#ff5ea8;
-  }
   *{box-sizing:border-box;}
-  html,body{background:var(--bg);margin:0;padding:0;}
-  body{font-family:'Inter',sans-serif;color:var(--body);-webkit-tap-highlight-color:transparent;}
+  html,body{background:#0b0d12;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;color:#e8e8ea;-webkit-tap-highlight-color:transparent;}
   button, input{font-family:inherit;}
-  ::placeholder{color:var(--faint);}
+  ::placeholder{color:#5b6272;}
+  @keyframes ftpulse{0%,100%{opacity:0.5;}50%{opacity:1;}}
 
-  #app{min-height:100vh;background:var(--bg);}
-  .main{padding:10px 20px 40px;max-width:520px;margin:0 auto;}
+  #app{min-height:100vh;background:var(--scr,#0b0d12);position:relative;}
+  .grad-bg{position:absolute;top:0;left:0;right:0;height:400px;background:var(--grad,radial-gradient(120% 100% at 50% 0%,#1c3f8a,#122a5c 45%,#0b0d12 100%));pointer-events:none;}
+  .main{position:relative;padding:10px 20px 40px;max-width:520px;margin:0 auto;}
 
-  .hdr{
-    position:sticky;top:0;z-index:30;background:var(--bg);
-    padding-top:calc(env(safe-area-inset-top,0px) + 14px);
-    padding-bottom:10px;
-    display:flex;justify-content:space-between;align-items:flex-start;
-  }
-  .hdr .greeting{font-size:13px;color:var(--muted);}
-  .hdr .headline{font-family:'Archivo',sans-serif;font-weight:900;font-size:26px;color:var(--text);letter-spacing:-0.5px;}
-  .hdr .datesub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);font-weight:500;margin-top:2px;}
+  .hdr{position:sticky;top:0;z-index:30;padding-top:calc(env(safe-area-inset-top,0px) + 14px);padding-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;}
+  .hdr .greeting{font-size:13px;color:var(--soft,#a9c2ff);}
+  .hdr .headline{font-family:'Archivo',sans-serif;font-weight:900;font-size:26px;color:#f3f4f6;letter-spacing:-0.5px;}
+  .hdr .subrow{display:flex;align-items:center;gap:8px;margin-top:4px;}
+  .hdr .datesub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--soft,#a9c2ff);font-weight:500;}
+  .streak{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:2px 8px 2px 6px;}
+  .streak span.n{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#fff;}
   .hdr-btns{display:flex;gap:6px;}
-  .navbtn{width:34px;height:34px;border:1px solid var(--border);background:var(--panel);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;cursor:pointer;}
-  .navbtn:disabled{opacity:0.35;cursor:default;}
-  .calbtn{width:40px;height:40px;border-radius:11px;background:var(--panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;}
+  .iconbtn{width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:#e8e8ea;}
+  .navbtn{width:34px;height:34px;border:1px solid var(--bd,#1e2330);background:var(--panel,#101622);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#7d879b;font-size:16px;cursor:pointer;}
 
-  .calpop{position:absolute;top:72px;right:20px;z-index:35;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;width:260px;box-shadow:0 18px 40px rgba(0,0,0,0.5);}
+  .calpop{position:absolute;top:46px;right:0;z-index:35;background:var(--panel,#101622);border:1px solid var(--bd,#1e2330);border-radius:16px;padding:14px;width:260px;box-shadow:0 18px 40px rgba(0,0,0,0.5);}
   .calpop-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-  .calpop-hdr button{width:28px;height:28px;border:1px solid var(--border);background:var(--bg);border-radius:7px;color:var(--muted);cursor:pointer;}
-  .calpop-hdr span{font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text);}
+  .calpop-hdr button{width:28px;height:28px;border:1px solid var(--bd,#1e2330);background:var(--scr,#0b0d12);border-radius:7px;color:#7d879b;cursor:pointer;}
+  .calpop-hdr span{font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;letter-spacing:0.5px;text-transform:uppercase;color:#f3f4f6;}
   .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-  .calgrid .dow{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);text-align:center;padding-bottom:4px;}
-  .calgrid .day{font-family:'JetBrains Mono',monospace;font-size:12px;text-align:center;padding:7px 0;border-radius:7px;border:1px solid transparent;background:transparent;}
-  .calgrid .day.today{border:1px solid #2e3a52;}
-  .calgrid .day.sel{background:var(--blue);color:#0a0a0c;font-weight:700;}
-  .calgrid .day.future{color:var(--vfaint);cursor:default;}
-  .calgrid .day.clickable{cursor:pointer;color:var(--body);}
+  .calgrid .dow{font-family:'JetBrains Mono',monospace;font-size:10px;color:#5b6272;text-align:center;padding-bottom:4px;}
+  .calgrid .day{font-family:'JetBrains Mono',monospace;font-size:12px;text-align:center;padding:7px 0;border-radius:7px;}
 
-  .dial-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:16px;}
-  .dial{position:relative;width:232px;height:232px;}
-  .dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-  .dial-center .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--faint);font-weight:700;}
-  .dial-center .num{font-family:'Archivo',sans-serif;font-weight:900;font-size:52px;line-height:0.9;letter-spacing:-2px;}
-  .dial-center .unit{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);}
-  .legend{display:flex;gap:22px;margin-top:6px;}
-  .legend-item{display:flex;align-items:center;gap:6px;}
-  .legend-item .dot{width:9px;height:9px;border-radius:2px;}
-  .legend-item span.txt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+  .hero{text-align:center;margin-bottom:8px;margin-top:14px;}
+  .hero .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--soft,#a9c2ff);font-weight:700;}
+  .hero .num{font-family:'Archivo',sans-serif;font-weight:900;font-size:88px;line-height:0.9;letter-spacing:-3px;margin-top:4px;}
+  .hero .cap{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--soft,#a9c2ff);}
+  .chips{display:flex;justify-content:center;gap:14px;margin:18px 0 20px;}
+  .chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:10px 16px;backdrop-filter:blur(8px);}
+  .chip .dot{width:10px;height:10px;border-radius:3px;}
+  .chip span.txt{font-family:'JetBrains Mono',monospace;font-size:12px;color:#e8eeff;}
 
-  .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;}
+  .panel{background:var(--panel,#101622);border:1px solid var(--bd,#1e2330);border-radius:16px;padding:14px;margin-bottom:12px;}
+  .trendcard{background:var(--panel,#101622);border:1px solid var(--bd,#1e2330);border-radius:18px;padding:16px 16px 14px;margin-bottom:12px;}
+  .trendhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .trendhdr .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:#7d879b;font-weight:700;}
+  .trendbtn{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.5px;font-weight:700;padding:5px 9px;border-radius:7px;cursor:pointer;border:1px solid var(--bd,#1e2330);background:transparent;color:#7d879b;}
+  .trendbtn.active{border:none;background:var(--accent,#4d8dff);color:var(--ink,#071018);}
+  .bars{display:flex;justify-content:space-between;align-items:flex-end;gap:6px;height:78px;}
+  .barcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;}
+  .barwrap{width:100%;display:flex;align-items:flex-end;justify-content:center;flex:1;}
+  .bar{width:70%;max-width:22px;border-radius:5px;}
+  .barcol .dow{font-family:'JetBrains Mono',monospace;font-size:9px;}
+  .trendfoot{display:flex;justify-content:space-between;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;}
+
   .panel-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
   .panel-row:last-child{margin-bottom:0;}
-  .panel-row label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);flex:1;}
-  .panel-row input[type=number]{width:96px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 11px;font-size:14px;}
-  .btn-primary{background:var(--blue);border:none;color:#0a0a0c;font-family:'Archivo',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;padding:11px;border-radius:10px;cursor:pointer;width:100%;}
+  .panel-row label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;color:#7d879b;flex:1;}
+  .panel-row input[type=number]{width:96px;background:var(--scr,#0b0d12);border:1px solid var(--bd,#1e2330);color:#f3f4f6;border-radius:8px;padding:9px 11px;font-size:14px;}
+  .btn-primary{background:var(--accent,#4d8dff);border:none;color:var(--ink,#071018);font-family:'Archivo',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;padding:11px;border-radius:10px;cursor:pointer;width:100%;}
 
-  .coach{background:linear-gradient(135deg,#0e1626,#0d1018);border:1px solid #1c3050;border-radius:18px;padding:16px;margin-bottom:12px;}
+  .coach{background:var(--coach,linear-gradient(135deg,#0e1626,#0d1018));border:1px solid var(--coachbd,#1c3050);border-radius:18px;padding:16px;margin-bottom:12px;}
   .coach-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
   .coach-hdr-left{display:flex;align-items:center;gap:8px;}
-  .coach-badge{width:22px;height:22px;border-radius:6px;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#0a0a0c;font-family:'Archivo';font-weight:900;font-size:13px;}
-  .coach-hdr-left span{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--blue);font-weight:700;}
-  .coach-settings-btn{background:none;border:none;color:var(--faint);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;text-transform:uppercase;}
-  .coach-settings-panel{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:12px;}
-  .coach-settings-panel label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;}
+  .coach-badge{width:22px;height:22px;border-radius:6px;background:var(--accent,#4d8dff);display:flex;align-items:center;justify-content:center;color:var(--ink,#071018);font-family:'Archivo';font-weight:900;font-size:13px;}
+  .coach-hdr-left span{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--accent,#4d8dff);font-weight:700;}
+  .coach-settings-btn{background:none;border:none;color:#5b6272;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;text-transform:uppercase;}
+  .coach-settings-panel{background:var(--scr,#0b0d12);border:1px solid var(--bd,#1e2330);border-radius:10px;padding:10px;margin-bottom:12px;}
+  .coach-settings-panel label{display:block;font-size:11px;color:#7d879b;margin-bottom:6px;}
   .coach-settings-panel .row{display:flex;gap:8px;}
-  .coach-settings-panel input[type=text]{flex:1;min-width:0;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 10px;font-size:12px;}
-  .coach-settings-panel button{background:var(--blue);border:none;color:#0a0a0c;font-weight:800;font-size:11px;text-transform:uppercase;padding:0 12px;border-radius:8px;cursor:pointer;}
-  .chatlist{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;margin-bottom:12px;}
-  .chat-user{align-self:flex-end;background:var(--panel);border:1px solid var(--border);color:var(--body);padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;max-width:88%;white-space:pre-wrap;}
-  .chat-ai{align-self:flex-start;background:#0e1626;border:1px solid #1c3050;color:#d4d8e0;padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;max-width:88%;white-space:pre-wrap;}
-  .chat-loading{align-self:flex-start;color:var(--faint);font-style:italic;font-size:13.5px;padding:4px 2px;}
+  .coach-settings-panel input[type=text]{flex:1;min-width:0;background:var(--panel,#101622);border:1px solid var(--bd,#1e2330);color:#f3f4f6;border-radius:8px;padding:9px 10px;font-size:12px;}
+  .coach-settings-panel button{background:var(--accent,#4d8dff);border:none;color:var(--ink,#071018);font-weight:800;font-size:11px;text-transform:uppercase;padding:0 12px;border-radius:8px;cursor:pointer;}
+  .chatlist{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;margin-bottom:12px;}
+  .chat-user{align-self:flex-end;background:var(--scr,#0b0d12);border:1px solid var(--bd,#1e2330);color:#e8e8ea;padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;max-width:88%;white-space:pre-wrap;}
+  .chat-ai{align-self:flex-start;background:var(--coach,#0e1626);border:1px solid var(--coachbd,#1c3050);color:#d4d8e0;padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;max-width:88%;white-space:pre-wrap;}
+  .chat-loading{align-self:flex-start;color:#7d879b;font-style:italic;font-size:13.5px;padding:4px 2px;animation:ftpulse 1.2s infinite;}
   .chat-hint{font-size:14px;line-height:1.5;color:#d4d8e0;margin-bottom:12px;}
   .coach-input-row{display:flex;gap:8px;}
-  .coach-input-row input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--text);}
-  .coach-send{width:44px;background:var(--blue);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#0a0a0c;font-family:'Archivo';font-weight:900;font-size:18px;cursor:pointer;flex-shrink:0;}
+  .coach-input-row input{flex:1;min-width:0;background:var(--scr,#0b0d12);border:1px solid var(--bd,#1e2330);border-radius:10px;padding:11px 14px;font-size:13px;color:#f3f4f6;}
+  .coach-send{width:44px;background:var(--accent,#4d8dff);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink,#071018);font-family:'Archivo';font-weight:900;font-size:18px;cursor:pointer;flex-shrink:0;}
   .coach-send:disabled{opacity:0.5;}
 
   .addfood{position:relative;}
   .addfood .namewrap{position:relative;margin-bottom:8px;}
-  .addfood input[type=text]{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:11px 13px;font-size:14px;}
-  .suggestbox{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;z-index:20;max-height:180px;overflow-y:auto;}
-  .suggest-item{display:flex;justify-content:space-between;padding:9px 12px;cursor:pointer;font-size:13px;color:var(--body);border-bottom:1px solid #1a2030;}
-  .suggest-item span.macro{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;}
+  .addfood input[type=text]{width:100%;background:var(--scr,#0b0d12);border:1px solid var(--bd,#1e2330);color:#f3f4f6;border-radius:9px;padding:11px 13px;font-size:14px;}
+  .suggestbox{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel,#101622);border:1px solid var(--bd,#1e2330);border-radius:10px;overflow:hidden;z-index:20;max-height:180px;overflow-y:auto;}
+  .suggest-item{display:flex;justify-content:space-between;padding:9px 12px;cursor:pointer;font-size:13px;color:#e8e8ea;border-bottom:1px solid var(--rowbd,#1a2030);}
+  .suggest-item span.macro{color:#7d879b;font-family:'JetBrains Mono',monospace;font-size:12px;}
+  .mealchips{display:flex;gap:6px;margin-bottom:8px;}
+  .mealchip{flex:1;min-width:0;font-family:'Inter';font-size:11px;font-weight:600;padding:9px 4px;border-radius:9px;cursor:pointer;border:1px solid var(--bd,#1e2330);background:transparent;color:#7d879b;}
+  .mealchip.active{border:1px solid var(--accent,#4d8dff);background:var(--accent,#4d8dff);color:var(--ink,#071018);}
   .addfood-row{display:flex;gap:8px;}
-  .addfood-row input[type=number]{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:11px 13px;font-size:14px;}
-  .addfood-row button{background:var(--blue);border:none;color:#0a0a0c;font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;text-transform:uppercase;padding:0 16px;border-radius:9px;cursor:pointer;}
+  .addfood-row input[type=number]{flex:1;min-width:0;background:var(--scr,#0b0d12);border:1px solid var(--bd,#1e2330);color:#f3f4f6;border-radius:9px;padding:11px 13px;font-size:14px;}
+  .addfood-row button{background:var(--accent,#4d8dff);border:none;color:var(--ink,#071018);font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;text-transform:uppercase;padding:0 16px;border-radius:9px;cursor:pointer;}
 
   .actionrow{display:flex;gap:8px;margin-bottom:16px;}
-  .btn-log{flex:1;background:var(--blue);border:none;border-radius:12px;padding:13px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.5px;color:#0a0a0c;text-transform:uppercase;cursor:pointer;}
-  .btn-gear{width:52px;background:var(--panel);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:18px;cursor:pointer;}
+  .btn-log{flex:1;background:var(--accent,#4d8dff);border:none;border-radius:12px;padding:13px;text-align:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.5px;color:var(--ink,#071018);text-transform:uppercase;cursor:pointer;}
+  .btn-gear{width:52px;background:var(--panel,#101622);border:1px solid var(--bd,#1e2330);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#7d879b;font-size:18px;cursor:pointer;}
 
-  .entries-hdr{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--faint);font-weight:700;padding:0 2px 8px;}
-  .entry-row{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-top:1px solid #1a2030;}
-  .entry-row .name{font-size:14px;color:var(--body);flex:1;}
-  .entry-row .macro{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-right:10px;}
-  .entry-row .del{background:none;border:none;color:var(--vfaint);font-size:16px;width:22px;height:22px;line-height:1;cursor:pointer;}
-  .empty-state{text-align:center;color:var(--faint);font-size:13px;padding:22px 0;}
+  .entries-hdr{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:#5b6272;font-weight:700;padding:0 2px 8px;}
+  .mealgroup{margin-bottom:14px;}
+  .mealgroup-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;}
+  .mealgroup-hdr .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--soft,#a9c2ff);font-weight:700;}
+  .mealgroup-hdr .total{font-family:'JetBrains Mono',monospace;font-size:11px;color:#7d879b;}
+  .entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 2px;border-top:1px solid var(--rowbd,#1a2030);}
+  .entry-row .name{font-size:14px;color:#e8e8ea;flex:1;}
+  .entry-row .macro{font-family:'JetBrains Mono',monospace;font-size:12px;color:#7d879b;margin-right:10px;}
+  .entry-row .del{background:none;border:none;color:#3a4150;font-size:16px;width:22px;height:22px;line-height:1;cursor:pointer;}
+  .empty-state{text-align:center;color:#5b6272;font-size:13px;padding:22px 0;}
   .cleardayrow{display:flex;justify-content:center;margin-top:14px;}
-  .cleardayrow button{background:none;border:none;color:var(--faint);font-size:12px;font-family:'Inter';cursor:pointer;padding:6px;}
-  .datarow{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:4px;}
-  .datarow button{background:none;border:none;color:var(--faint);font-size:12px;font-family:'Inter';cursor:pointer;padding:6px;text-decoration:underline;}
-  .datarow .sep{color:var(--vfaint);font-size:12px;}
+  .cleardayrow button{background:none;border:none;color:#5b6272;font-size:12px;font-family:'Inter';cursor:pointer;padding:6px;}
+  .datarow{display:flex;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid var(--rowbd,#1a2030);}
+  .datarow button{flex:1;background:var(--panel,#101622);border:1px solid var(--bd,#1e2330);border-radius:11px;padding:11px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.5px;color:var(--soft,#a9c2ff);cursor:pointer;}
+  .datamsg{text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent,#4d8dff);margin-top:10px;}
+
+  .themesheet-backdrop{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px);}
+  .themesheet{position:fixed;left:0;right:0;bottom:0;z-index:51;background:var(--panel,#101622);border-top:1px solid var(--bd,#1e2330);border-radius:26px 26px 0 0;padding:18px 18px 28px;max-height:76vh;display:flex;flex-direction:column;box-shadow:0 -20px 50px rgba(0,0,0,0.5);max-width:520px;margin:0 auto;}
+  .themesheet-handle{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,0.18);margin:0 auto 16px;}
+  .themesheet-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;}
+  .themesheet-hdr .title{font-family:'Archivo',sans-serif;font-weight:900;font-size:19px;color:#f3f4f6;letter-spacing:-0.3px;}
+  .themesheet-hdr .count{font-family:'JetBrains Mono',monospace;font-size:11px;color:#7d879b;margin-left:8px;}
+  .themesheet-close{width:30px;height:30px;border:1px solid var(--bd,#1e2330);background:var(--scr,#0b0d12);border-radius:8px;color:#7d879b;font-size:16px;cursor:pointer;}
+  .themegrid{overflow-y:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-bottom:4px;}
+  .themeswatch{position:relative;aspect-ratio:1/1;padding:0;border-radius:16px;cursor:pointer;overflow:hidden;border:none;}
+  .themeswatch .dot{position:absolute;top:8px;left:8px;width:14px;height:14px;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,0.4);}
+  .themeswatch .label{position:absolute;left:10px;bottom:9px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.5px;color:#fff;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
+  .themeswatch .check{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:#111;font-weight:700;}
 </style>
 </head>
 <body>
-<div id="app"><div class="main" id="main">Loading…</div></div>
+<div id="app"><div class="grad-bg"></div><div class="main" id="main">Loading…</div></div>
 
 <script>
 (function(){
+  // ---------- theme palettes ----------
+  const THEMES = [
+    { name:'VOLTAGE', h:215, accent:'#4d8dff', chip2:'#ff5ea8' },
+    { name:'VENOM',   h:158, accent:'#26e0a3', chip2:'#c6f24e' },
+    { name:'NEBULA',  h:265, accent:'#8b5cf6', chip2:'#22d3ee' },
+    { name:'SUNSET',  h:18,  accent:'#ff8a3d', chip2:'#ff5ea8' },
+    { name:'INFERNO', h:348, accent:'#f43f5e', chip2:'#fbbf24' },
+    { name:'TIDE',    h:175, accent:'#2dd4bf', chip2:'#38bdf8' },
+    { name:'BULLION', h:45,  accent:'#f5c518', chip2:'#fb923c' },
+    { name:'MIDNIGHT',h:239, accent:'#6366f1', chip2:'#34d399' },
+    { name:'BLOSSOM', h:345, accent:'#fb7185', chip2:'#c084fc' },
+    { name:'STEEL',   h:210, accent:'#38bdf8', chip2:'#f59e0b' },
+    { name:'TOXIC',   h:82,  accent:'#a3e635', chip2:'#22d3ee' },
+    { name:'COPPER',  h:22,  accent:'#d97b4d', chip2:'#2dd4bf' },
+    { name:'HYPER',   h:318, accent:'#e838b0', chip2:'#3b82f6' },
+    { name:'AQUA',    h:192, accent:'#06b6d4', chip2:'#a3e635' },
+    { name:'GRAPE',   h:280, accent:'#a855f7', chip2:'#f0abfc' },
+    { name:'EMBER',   h:12,  accent:'#f97316', chip2:'#eab308' },
+    { name:'MINT',    h:150, accent:'#10b981', chip2:'#5eead4' },
+    { name:'COBALT',  h:224, accent:'#3b82f6', chip2:'#60a5fa' },
+    { name:'RUBY',    h:340, accent:'#e11d48', chip2:'#fb7185' },
+    { name:'SAND',    h:38,  accent:'#eab308', chip2:'#f59e0b' },
+    { name:'FOREST',  h:140, accent:'#4ade80', chip2:'#a3e635' },
+    { name:'PLUM',    h:300, accent:'#c026d3', chip2:'#8b5cf6' },
+    { name:'ICE',     h:200, accent:'#7dd3fc', chip2:'#e0f2fe' },
+    { name:'GRAPHITE',h:220, accent:'#94a3b8', chip2:'#38bdf8' }
+  ];
+  function pal(i){
+    const t = THEMES[i] || THEMES[0];
+    const h = t.h;
+    return {
+      name: t.name, accent: t.accent, chip2: t.chip2,
+      scr:  `hsl(${h} 32% 5%)`,
+      bd:   `hsl(${h} 26% 15%)`,
+      panel:`hsl(${h} 30% 10%)`,
+      grad: `radial-gradient(120% 100% at 50% 0%, hsl(${h} 55% 34%), hsl(${h} 52% 20%) 45%, hsl(${h} 32% 5%) 100%)`,
+      soft: `hsl(${h} 78% 82%)`,
+      coach:`linear-gradient(135deg, hsl(${h} 45% 13%), hsl(${h} 42% 9%))`,
+      coachbd:`hsl(${h} 48% 24%)`,
+      rowbd:`hsl(${h} 24% 14%)`,
+      muted:`hsl(${h} 16% 55%)`,
+      ink:  `hsl(${h} 55% 8%)`
+    };
+  }
+  function themeVarsStyle(i){
+    const p = pal(i);
+    return `--scr:${p.scr};--bd:${p.bd};--panel:${p.panel};--grad:${p.grad};--accent:${p.accent};--chip2:${p.chip2};--soft:${p.soft};--coach:${p.coach};--coachbd:${p.coachbd};--rowbd:${p.rowbd};--muted:${p.muted};--ink:${p.ink};`;
+  }
+
   // ---------- storage ----------
   const TARGETS_KEY = 'fuel-targets';
   const LIBRARY_KEY = 'fuel-food-library';
+  const THEME_KEY = 'fuel-theme';
   const WORKER_URL_KEY = 'fuel-ai-worker-url';
   const entryKey = (k) => 'fuel-entries:'+k;
+  const MEALS = ['Breakfast','Lunch','Dinner','Snacks'];
+  function defaultMeal(){ const h=new Date().getHours(); if(h<11) return 'Breakfast'; if(h<15) return 'Lunch'; if(h<21) return 'Dinner'; return 'Snacks'; }
 
   function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
   function lsRemove(k){ try{ localStorage.removeItem(k); }catch(e){} }
 
-  // ---------- date helpers ----------
   function keyOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function parseKey(k){ const [y,m,dd]=k.split('-').map(Number); return new Date(y, m-1, dd); }
   function todayKey(){ return keyOf(new Date()); }
 
-  // ---------- state ----------
   const state = {
     ready:false,
     targets:{ calories:1800, protein:150 },
@@ -154,10 +224,15 @@
     calMonth:null,
     showCal:false,
     showTargets:false,
+    showThemes:false,
     addOpen:false,
     suggestions:[],
     chat:[],
     asking:false,
+    themeIdx:0,
+    trendMode:'cal',
+    mealSel:null,
+    dataMsg:'',
     showAiSettings:false,
     workerUrl: lsGet(WORKER_URL_KEY) || ''
   };
@@ -192,6 +267,7 @@
     lsSet(LIBRARY_KEY, JSON.stringify(library));
     state.library = library;
   }
+  function pickTheme(i){ lsSet(THEME_KEY, String(i)); state.themeIdx = i; state.showThemes = false; render(); }
 
   // ---------- init ----------
   function init(){
@@ -201,12 +277,16 @@
     let library = {};
     const lRaw = lsGet(LIBRARY_KEY);
     if(lRaw){ try{ library = JSON.parse(lRaw); }catch(e){} }
+    let themeIdx = 0;
+    const savedTheme = lsGet(THEME_KEY);
+    if(savedTheme !== null && !isNaN(Number(savedTheme))){ themeIdx = Math.max(0, Math.min(THEMES.length-1, Number(savedTheme))); }
     const viewKey = todayKey();
     const now = new Date();
     state.ready = true;
     state.targets = targets;
     state.library = library;
     state.viewKey = viewKey;
+    state.themeIdx = themeIdx;
     state.calMonth = { y: now.getFullYear(), m: now.getMonth() };
     state.entries = loadEntries(viewKey);
     state.loggedDates = scanLoggedDates();
@@ -234,11 +314,39 @@
     render();
   }
 
-  // ---------- totals ----------
+  // ---------- totals / streak / trends ----------
   function totals(){
     const c = state.entries.reduce((s,e)=>s+Number(e.cal||0),0);
     const p = state.entries.reduce((s,e)=>s+Number(e.pro||0),0);
     return { c, p };
+  }
+  function dayTotals(k){
+    const es = loadEntries(k);
+    return { c: es.reduce((s,e)=>s+Number(e.cal||0),0), p: es.reduce((s,e)=>s+Number(e.pro||0),0), n: es.length };
+  }
+  function computeStreak(){
+    const t = state.targets;
+    let streak = 0;
+    const d = new Date();
+    if(dayTotals(keyOf(d)).p < t.protein){ d.setDate(d.getDate()-1); }
+    for(let i=0;i<400;i++){
+      const dt = dayTotals(keyOf(d));
+      if(dt.n>0 && dt.p >= t.protein){ streak++; d.setDate(d.getDate()-1); }
+      else break;
+    }
+    return streak;
+  }
+  function lastWeek(){
+    const out = [];
+    const d = new Date();
+    d.setDate(d.getDate()-6);
+    for(let i=0;i<7;i++){
+      const k = keyOf(d);
+      const dt = dayTotals(k);
+      out.push({ key:k, dow: d.toLocaleDateString(undefined,{weekday:'narrow'}), isToday: k===todayKey(), c:dt.c, p:dt.p });
+      d.setDate(d.getDate()+1);
+    }
+    return out;
   }
 
   // ---------- add food ----------
@@ -250,7 +358,8 @@
     const cal = Number(calEl && calEl.value);
     const pro = Number(proEl && proEl.value) || 0;
     if(!name || !cal) return;
-    const entry = { id: Date.now()+'-'+Math.random().toString(36).slice(2), name, cal, pro };
+    const meal = state.mealSel || defaultMeal();
+    const entry = { id: Date.now()+'-'+Math.random().toString(36).slice(2), name, cal, pro, meal };
     rememberFood(name, cal, pro);
     persistEntries([...state.entries, entry]);
     state.suggestions = [];
@@ -261,11 +370,7 @@
   function renderSuggestBox(){
     const box = document.getElementById('ft-suggestbox');
     if(!box) return;
-    if(!state.suggestions.length){
-      box.style.display = 'none';
-      box.innerHTML = '';
-      return;
-    }
+    if(!state.suggestions.length){ box.style.display='none'; box.innerHTML=''; return; }
     box.style.display = 'block';
     box.innerHTML = state.suggestions.map((f,i) =>
       `<div class="suggest-item" onclick="App.fillSuggestion(${i})"><span>${esc(f.name)}</span><span class="macro">${Math.round(f.cal)} / ${Math.round(f.pro)}g</span></div>`
@@ -312,7 +417,7 @@
     const {c,p} = totals();
     const t = state.targets;
     const remC = Math.max(0, t.calories - c), remP = Math.max(0, t.protein - p);
-    const logged = state.entries.length ? state.entries.map(e=>`${e.name} (${Math.round(e.cal)} kcal, ${Math.round(e.pro)}g)`).join('; ') : 'nothing yet';
+    const logged = state.entries.length ? state.entries.map(e=>`${e.name} (${Math.round(e.cal)} kcal, ${Math.round(e.pro)}g, ${e.meal||'Snacks'})`).join('; ') : 'nothing yet';
     const common = Object.values(state.library).slice(0,20).map(f=>`${f.name} (${Math.round(f.cal)} kcal, ${Math.round(f.pro)}g)`).join('; ');
     return `You are a blunt, practical nutrition coach inside a calorie/protein tracker. Keep answers to 2-4 sentences, specific and actionable — no fluff, no medical disclaimers. This person is on a cutting phase.\nDay: ${state.viewKey}\nDaily target: ${t.calories} kcal, ${t.protein}g protein\nEaten: ${Math.round(c)} kcal, ${Math.round(p)}g protein\nRemaining: ${Math.round(remC)} kcal, ${Math.round(remP)}g protein\nLogged today: ${logged}\nRegular foods: ${common || 'none saved'}\nIf asked what to eat, give 1-2 concrete options that fit the remaining budget, ideally from their regular foods.`;
   }
@@ -389,9 +494,75 @@
       const isFuture = k > todayK;
       const isSel = k === state.viewKey;
       const isToday = k === todayK;
-      cells.push({ empty:false, key:k, label:String(d), isFuture, isSel, isToday, clickable: !isFuture });
+      const hasLog = logged.has(k);
+      cells.push({ empty:false, key:k, label:String(d), isFuture, isSel, isToday, hasLog, clickable: !isFuture });
     }
     return cells;
+  }
+
+  // ---------- export / import ----------
+  function gatherData(){
+    const days = {};
+    scanLoggedDates().forEach(k => { days[k] = loadEntries(k); });
+    return {
+      app: 'fuel-tracker', version: 1, exportedAt: new Date().toISOString(),
+      targets: state.targets, library: state.library, theme: state.themeIdx, days
+    };
+  }
+  function flashMsg(m){
+    state.dataMsg = m;
+    render();
+    clearTimeout(window.__ftMsgT);
+    window.__ftMsgT = setTimeout(() => { state.dataMsg = ''; render(); }, 2500);
+  }
+  function exportData(){
+    try{
+      const blob = new Blob([JSON.stringify(gatherData(), null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'fuel-tracker-' + todayKey() + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      flashMsg('Exported ✓');
+    }catch(e){ flashMsg('Export failed'); }
+  }
+  function triggerImport(){
+    const input = document.getElementById('ft-import');
+    if(!input) return;
+    input.value = '';
+    input.click();
+  }
+  function importFile(e){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const data = JSON.parse(reader.result);
+        if(!data || data.app !== 'fuel-tracker') throw new Error('bad');
+        if(data.targets) lsSet(TARGETS_KEY, JSON.stringify(data.targets));
+        if(data.library) lsSet(LIBRARY_KEY, JSON.stringify(data.library));
+        if(data.theme != null) lsSet(THEME_KEY, String(data.theme));
+        if(data.days){
+          Object.keys(data.days).forEach(k => {
+            const es = data.days[k];
+            if(Array.isArray(es) && es.length) lsSet(entryKey(k), JSON.stringify(es));
+          });
+        }
+        state.targets = data.targets || state.targets;
+        state.library = data.library || state.library;
+        state.themeIdx = data.theme != null ? Number(data.theme) : state.themeIdx;
+        state.entries = loadEntries(state.viewKey);
+        state.loggedDates = scanLoggedDates();
+        flashMsg('Imported ✓');
+      }catch(err){ flashMsg('Invalid file'); }
+      e.target.value = '';
+      render();
+    };
+    reader.readAsText(file);
   }
 
   // ---------- escaping ----------
@@ -399,9 +570,11 @@
 
   // ---------- render ----------
   function render(){
+    const appEl = document.getElementById('app');
     const mainEl = document.getElementById('main');
 
-    // capture focus state to restore after innerHTML rebuild
+    appEl.style.cssText = themeVarsStyle(state.themeIdx);
+
     const active = document.activeElement;
     const activeId = active && active.id;
     const activeValue = active && 'value' in active ? active.value : null;
@@ -429,8 +602,8 @@
     const t = state.targets;
     const remC = t.calories - c, remP = t.protein - p;
     const calPct = Math.max(0, Math.min(1, c / t.calories));
-    const proPct = Math.max(0, Math.min(1, p / t.protein));
     const over = remC < 0;
+    const pal2 = pal(state.themeIdx);
 
     const now = new Date();
     const h = now.getHours();
@@ -442,16 +615,31 @@
     const dow3 = vd.toLocaleDateString(undefined,{weekday:'short'}).toUpperCase();
     const dateSub = state.viewKey + ' \u00B7 ' + dow3;
 
+    const streak = computeStreak();
     const centerNum = Math.round(Math.abs(remC));
-    const centerLabel = over ? 'OVER' : 'REMAINING';
-    const centerColor = over ? 'var(--pink)' : 'var(--text)';
-    const calRingColor = over ? 'var(--pink)' : 'var(--blue)';
-    const calOffset = (628.3 * (1 - calPct)).toFixed(1);
-    const proOffset = (490.1 * (1 - proPct)).toFixed(1);
+    const heroLabel = over ? 'CALORIES OVER' : 'CALORIES REMAINING';
+    const heroCaption = Math.round(c) + ' of ' + t.calories + ' kcal eaten';
+    const centerColor = over ? 'var(--chip2)' : '#ffffff';
 
     const calMonthLabel = new Date(state.calMonth.y, state.calMonth.m, 1).toLocaleDateString(undefined,{month:'long', year:'numeric'});
     const calDays = buildCalDays();
     const dow = ['S','M','T','W','T','F','S'];
+
+    // weekly trend
+    const mode = state.trendMode;
+    const week = lastWeek();
+    const maxV = Math.max(mode==='cal'?t.calories:t.protein, ...week.map(d=>mode==='cal'?d.c:d.p), 1);
+    const daysWithData = week.filter(d => (mode==='cal'?d.c:d.p) > 0);
+    const avg = daysWithData.length ? Math.round(daysWithData.reduce((s,d)=>s+(mode==='cal'?d.c:d.p),0)/daysWithData.length) : 0;
+
+    // meal groups
+    const mealGroups = MEALS.map(m => {
+      const items = state.entries.filter(e => (e.meal||'Snacks') === m);
+      if(!items.length) return null;
+      const gc = items.reduce((s,e)=>s+Number(e.cal||0),0);
+      const gp = items.reduce((s,e)=>s+Number(e.pro||0),0);
+      return { label: m, total: Math.round(gc)+' kcal \u00B7 '+Math.round(gp)+'g', items };
+    }).filter(Boolean);
 
     let html = '';
 
@@ -460,12 +648,14 @@
       <div>
         <div class="greeting">${esc(greeting)}</div>
         <div class="headline">${esc(headline)}</div>
-        <div class="datesub">${esc(dateSub)}</div>
+        <div class="subrow">
+          <div class="datesub">${esc(dateSub)}</div>
+          ${streak>0 ? `<div class="streak">\u{1F525}<span class="n">${streak}${streak===1?' day':' days'}</span></div>` : ''}
+        </div>
       </div>
       <div class="hdr-btns">
-        <button class="navbtn" onclick="App.goDay(-1)">\u2039</button>
-        <button class="calbtn" onclick="App.toggleCal()">\u{1F4C5}</button>
-        <button class="navbtn" ${isToday?'disabled':''} onclick="App.goDay(1)">\u203A</button>
+        <button class="iconbtn" onclick="App.toggleThemes()">\u{1F3A8}</button>
+        <button class="iconbtn" onclick="App.toggleCal()">\u{1F4C5}</button>
       </div>`;
 
     if(state.showCal){
@@ -479,35 +669,56 @@
       dow.forEach(d => { html += `<div class="dow">${d}</div>`; });
       calDays.forEach(d => {
         if(d.empty){ html += `<div></div>`; return; }
-        let cls = 'day';
-        if(d.isToday) cls += ' today';
-        if(d.isSel) cls += ' sel';
-        if(d.isFuture) cls += ' future'; else if(!d.isSel) cls += ' clickable';
+        let bg = 'transparent', color = d.isFuture ? '#3a4150' : '#e8e8ea', border = '1px solid transparent';
+        if(d.isToday) border = '1px solid var(--coachbd)';
+        if(d.isSel){ bg = 'var(--accent)'; color = 'var(--ink)'; }
+        else if(d.hasLog){ color = 'var(--soft)'; }
+        const style = `background:${bg};color:${color};border:${border};cursor:${d.isFuture?'default':'pointer'};font-weight:${d.isSel?700:400};`;
         const onclick = (!d.isFuture) ? `onclick="App.pickDay('${d.key}')"` : '';
-        html += `<div class="${cls}" ${onclick}>${d.label}</div>`;
+        html += `<div class="day" style="${style}" ${onclick}>${d.label}</div>`;
       });
       html += `</div></div>`;
     }
     html += `</div>`; // .hdr
 
-    // dial hero
-    html += `<div class="dial-wrap">
-      <div class="dial">
-        <svg width="232" height="232" viewBox="0 0 232 232" style="transform:rotate(-90deg);">
-          <circle cx="116" cy="116" r="100" fill="none" stroke="#12203a" stroke-width="16"/>
-          <circle cx="116" cy="116" r="100" fill="none" stroke="${calRingColor}" stroke-width="16" stroke-linecap="round" stroke-dasharray="628.3" stroke-dashoffset="${calOffset}"/>
-          <circle cx="116" cy="116" r="78" fill="none" stroke="#331229" stroke-width="12"/>
-          <circle cx="116" cy="116" r="78" fill="none" stroke="var(--pink)" stroke-width="12" stroke-linecap="round" stroke-dasharray="490.1" stroke-dashoffset="${proOffset}"/>
-        </svg>
-        <div class="dial-center">
-          <div class="lbl">${centerLabel}</div>
-          <div class="num" style="color:${centerColor};">${centerNum}</div>
-          <div class="unit">kcal</div>
+    // hero
+    html += `<div class="hero">
+      <div class="lbl">${esc(heroLabel)}</div>
+      <div class="num" style="color:${centerColor};">${centerNum}</div>
+      <div class="cap">${esc(heroCaption)}</div>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="dot" style="background:var(--accent);"></span><span class="txt">${Math.round(calPct*100)}% cals</span></div>
+      <div class="chip"><span class="dot" style="background:var(--chip2);"></span><span class="txt">${Math.round(p)} / ${t.protein}g pro</span></div>
+    </div>`;
+
+    // weekly trend
+    html += `<div class="trendcard">
+      <div class="trendhdr">
+        <span class="lbl">LAST 7 DAYS</span>
+        <div style="display:flex;gap:6px;">
+          <button class="trendbtn ${mode==='cal'?'active':''}" onclick="App.setTrend('cal')">KCAL</button>
+          <button class="trendbtn ${mode==='pro'?'active':''}" onclick="App.setTrend('pro')">PROTEIN</button>
         </div>
       </div>
-      <div class="legend">
-        <div class="legend-item"><span class="dot" style="background:var(--blue);"></span><span class="txt">${Math.round(c)} / ${t.calories}</span></div>
-        <div class="legend-item"><span class="dot" style="background:var(--pink);"></span><span class="txt">${Math.round(p)} / ${t.protein}g pro</span></div>
+      <div class="bars">`;
+    week.forEach(d => {
+      const v = mode==='cal' ? d.c : d.p;
+      const tgt = mode==='cal' ? t.calories : t.protein;
+      const pct = Math.max(v>0?8:0, Math.round(v/maxV*100));
+      const hit = v >= tgt && v>0;
+      const col = v===0 ? 'var(--rowbd)' : hit ? 'var(--accent)' : pal2.accent+'66';
+      const outline = d.isToday ? 'outline:1.5px solid var(--soft);outline-offset:1px;' : '';
+      const labelColor = d.isToday ? 'var(--soft)' : '#7d879b';
+      html += `<div class="barcol">
+        <div class="barwrap"><div class="bar" style="height:${pct}%;min-height:4px;background:${col};${outline}"></div></div>
+        <span class="dow" style="color:${labelColor};">${esc(d.dow)}</span>
+      </div>`;
+    });
+    html += `</div>
+      <div class="trendfoot">
+        <span style="color:#7d879b;">avg ${mode==='cal' ? avg+' kcal' : avg+'g'}</span>
+        <span style="color:var(--soft);">target ${mode==='cal' ? t.calories+' kcal' : t.protein+'g'}</span>
       </div>
     </div>`;
 
@@ -554,11 +765,17 @@
 
     // add food panel
     if(state.addOpen){
+      const curMeal = state.mealSel || defaultMeal();
       html += `<div class="panel addfood">
         <div class="namewrap">
           <input type="text" id="ft-name" autocomplete="off" placeholder="Food name" oninput="App.nameInput(event)">
           <div class="suggestbox" id="ft-suggestbox" style="display:none;"></div>
         </div>
+        <div class="mealchips">`;
+      MEALS.forEach(m => {
+        html += `<button class="mealchip ${curMeal===m?'active':''}" onclick="App.setMeal('${m}')">${m}</button>`;
+      });
+      html += `</div>
         <div class="addfood-row">
           <input type="number" id="ft-cal" placeholder="kcal">
           <input type="number" id="ft-pro" placeholder="protein g">
@@ -576,80 +793,58 @@
     // entries
     html += `<div class="entries-hdr"><span>LOGGED \u00B7 ${state.entries.length}</span><span>KCAL / PRO</span></div>`;
     if(state.entries.length){
-      html += `<div>`;
-      state.entries.forEach(e => {
-        html += `<div class="entry-row">
-          <span class="name">${esc(e.name)}</span>
-          <span class="macro">${Math.round(e.cal)} / ${Math.round(e.pro)}g</span>
-          <button class="del" onclick="App.deleteEntry('${e.id}')">\u00D7</button>
-        </div>`;
+      mealGroups.forEach(g => {
+        html += `<div class="mealgroup">
+          <div class="mealgroup-hdr"><span class="lbl">${esc(g.label)}</span><span class="total">${esc(g.total)}</span></div>`;
+        g.items.forEach(e => {
+          html += `<div class="entry-row">
+            <span class="name">${esc(e.name)}</span>
+            <span class="macro">${Math.round(e.cal)} / ${Math.round(e.pro)}g</span>
+            <button class="del" onclick="App.deleteEntry('${e.id}')">\u00D7</button>
+          </div>`;
+        });
+        html += `</div>`;
       });
-      html += `</div>`;
     } else {
       html += `<div class="empty-state">Nothing logged yet \u2014 tap Log food to start.</div>`;
     }
 
     html += `<div class="cleardayrow"><button onclick="App.clearDay()">Clear this day</button></div>`;
     html += `<div class="datarow">
-      <button onclick="App.exportData()">Export data</button>
-      <span class="sep">\u00B7</span>
-      <button onclick="App.triggerImport()">Import data</button>
-    </div>
-    <input type="file" id="ft-import-file" accept="application/json" style="display:none">`;
+      <button onclick="App.exportData()">\u2193 EXPORT DATA</button>
+      <button onclick="App.triggerImport()">\u2191 IMPORT DATA</button>
+      <input type="file" id="ft-import" accept="application/json,.json" style="display:none" onchange="App.importFile(event)">
+    </div>`;
+    if(state.dataMsg){ html += `<div class="datamsg">${esc(state.dataMsg)}</div>`; }
+
+    // theme picker sheet
+    if(state.showThemes){
+      html += `<div class="themesheet-backdrop" onclick="App.closeThemes()"></div>
+      <div class="themesheet">
+        <div class="themesheet-handle"></div>
+        <div class="themesheet-hdr">
+          <div><span class="title">Theme</span><span class="count">24 palettes</span></div>
+          <button class="themesheet-close" onclick="App.closeThemes()">\u00D7</button>
+        </div>
+        <div class="themegrid">`;
+      THEMES.forEach((t, i) => {
+        const p2 = pal(i);
+        const sel = i === state.themeIdx;
+        const bg = `radial-gradient(130% 120% at 28% 12%, ${t.accent}, hsl(${t.h} 55% 24%) 55%, hsl(${t.h} 45% 12%) 100%)`;
+        const shadow = sel ? `0 0 0 2.5px #fff, 0 6px 18px ${t.accent}55` : 'inset 0 0 0 1px rgba(255,255,255,0.08)';
+        html += `<button class="themeswatch" style="background:${bg};box-shadow:${shadow};" onclick="App.pickTheme(${i})">
+          <span class="dot" style="background:${t.chip2};"></span>
+          <span class="label">${esc(t.name)}</span>
+          ${sel ? '<span class="check">\u2713</span>' : ''}
+        </button>`;
+      });
+      html += `</div></div>`;
+    }
 
     return html;
   }
 
-  // ---------- export / import ----------
-  function exportData(){
-    const data = {};
-    try{
-      for(let i=0;i<localStorage.length;i++){
-        const key = localStorage.key(i);
-        if(key && key.indexOf('fuel-')===0){
-          data[key] = localStorage.getItem(key);
-        }
-      }
-    }catch(e){}
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'fuel-tracker-backup-' + todayKey() + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-  function triggerImport(){
-    const input = document.getElementById('ft-import-file');
-    if(!input) return;
-    input.value = '';
-    input.onchange = () => {
-      const file = input.files && input.files[0];
-      if(file) importDataFile(file);
-    };
-    input.click();
-  }
-  function importDataFile(file){
-    const reader = new FileReader();
-    reader.onload = () => {
-      let data;
-      try{ data = JSON.parse(reader.result); }
-      catch(e){ alert('Import failed: that file is not valid JSON.'); return; }
-      if(!data || typeof data !== 'object'){ alert('Import failed: unexpected file format.'); return; }
-      const keys = Object.keys(data).filter(k => k.indexOf('fuel-')===0);
-      if(!keys.length){ alert('Import failed: no Fuel Tracker data found in that file.'); return; }
-      if(!confirm('This will overwrite your current entries, targets, and food library with the contents of this backup. Continue?')) return;
-      keys.forEach(k => lsSet(k, data[k]));
-      init();
-      alert('Import complete \u2014 your data has been restored.');
-    };
-    reader.onerror = () => alert('Import failed: could not read that file.');
-    reader.readAsText(file);
-  }
-
-  // ---------- public API (used by inline onclick handlers) ----------
+  // ---------- public API ----------
   window.App = {
     goDay, pickDay,
     toggleCal(){ state.showCal = !state.showCal; render(); },
@@ -657,13 +852,18 @@
     calNext(){ const m=state.calMonth.m+1; const d=new Date(state.calMonth.y, m, 1); state.calMonth={y:d.getFullYear(), m:d.getMonth()}; render(); },
     toggleTargets, saveTargets,
     toggleAiSettings, saveAiSettings,
-    toggleAdd(){ state.addOpen = !state.addOpen; state.suggestions = []; render(); },
+    toggleAdd(){ state.addOpen = !state.addOpen; state.suggestions = []; if(state.addOpen && !state.mealSel){ state.mealSel = defaultMeal(); } render(); },
+    setMeal(m){ state.mealSel = m; render(); },
     submitAdd, nameInput,
     fillSuggestion(i){ fillSuggestion(state.suggestions[i]); },
     ask,
     deleteEntry(id){ persistEntries(state.entries.filter(x=>x.id!==id)); },
     clearDay(){ persistEntries([]); },
-    exportData, triggerImport
+    exportData, triggerImport, importFile,
+    toggleThemes(){ state.showThemes = !state.showThemes; render(); },
+    closeThemes(){ state.showThemes = false; render(); },
+    pickTheme,
+    setTrend(m){ state.trendMode = m; render(); }
   };
 
   init();
