@@ -1,5 +1,5 @@
-const CACHE_NAME = 'fuel-tracker-v4';
-const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192-v3.png', './icon-512-v3.png'];
+const CACHE_NAME = 'fuel-tracker-v5';
+const APP_SHELL = ['./', './index.html', './manifest.json', './icon-192-v4.png', './icon-512-v4.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
